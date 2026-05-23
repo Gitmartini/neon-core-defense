@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Gitmartini/neon-core-defense#readme",
   "devDependencies": {
-    "@playwright/test": "^1.60.0"
+    "@playwright/test": "^1.60.0",
+    "pngjs": "^7.0.0"
   }
 }

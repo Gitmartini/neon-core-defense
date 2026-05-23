@@ -80,6 +80,21 @@ const colors = {
   dark: "#05080d"
 };
 
+const enemySpriteSources = {
+  interceptor: "assets/ships/interceptor.png",
+  raider: "assets/ships/raider.png",
+  dreadnought: "assets/ships/dreadnought.png",
+  artillery: "assets/ships/artillery.png",
+  droneLeader: "assets/ships/drone-leader.png"
+};
+
+const enemySpriteImages = {};
+for (const [name, src] of Object.entries(enemySpriteSources)) {
+  const image = new Image();
+  image.src = src;
+  enemySpriteImages[name] = image;
+}
+
 const enemyTypes = {
   interceptor: {
     radius: 10,
@@ -91,7 +106,9 @@ const enemyTypes = {
     damage: 6,
     color: colors.pink,
     accent: colors.cyan,
-    shape: "needle"
+    shape: "needle",
+    sprite: "interceptor",
+    spriteWidth: 48
   },
   raider: {
     radius: 13,
@@ -103,7 +120,9 @@ const enemyTypes = {
     damage: 9,
     color: colors.cyan,
     accent: colors.lime,
-    shape: "saucer"
+    shape: "saucer",
+    sprite: "raider",
+    spriteWidth: 64
   },
   dreadnought: {
     radius: 20,
@@ -115,7 +134,9 @@ const enemyTypes = {
     damage: 16,
     color: colors.amber,
     accent: colors.orange,
-    shape: "barge"
+    shape: "barge",
+    sprite: "dreadnought",
+    spriteWidth: 96
   },
   artillery: {
     radius: 16,
@@ -128,9 +149,25 @@ const enemyTypes = {
     color: colors.violet,
     accent: colors.pink,
     shape: "frigate",
+    sprite: "artillery",
+    spriteWidth: 88,
     stopRange: 285,
     fireDelay: 2.1,
     shotDamage: 7
+  },
+  droneLeader: {
+    radius: 12,
+    hp: 36,
+    hpScale: 7,
+    speed: 76,
+    speedScale: 4,
+    value: 18,
+    damage: 8,
+    color: colors.red,
+    accent: colors.orange,
+    shape: "needle",
+    sprite: "droneLeader",
+    spriteWidth: 58
   }
 };
 
@@ -229,6 +266,8 @@ function spawnEnemy() {
     damage: template.damage,
     color: template.color,
     accent: template.accent,
+    sprite: template.sprite,
+    spriteWidth: template.spriteWidth,
     angle: angleToCore,
     spin: rand(0, Math.PI * 2),
     strafe: rand(-1, 1),
@@ -243,6 +282,7 @@ function chooseEnemyType() {
   const roll = Math.random();
   if (state.wave > 4 && roll > 0.82) return "artillery";
   if (state.wave > 3 && roll > 0.64) return "dreadnought";
+  if (state.wave > 2 && roll > 0.44 && roll < 0.58) return "droneLeader";
   if (state.wave > 2 && roll < 0.22) return "interceptor";
   return "raider";
 }
@@ -798,6 +838,8 @@ function drawEnemies() {
 }
 
 function drawShipHull(enemy) {
+  if (drawEnemySprite(enemy)) return;
+
   ctx.scale(1.22, 1.22);
   ctx.shadowColor = enemy.color;
   ctx.shadowBlur = 13;
@@ -816,6 +858,31 @@ function drawShipHull(enemy) {
   if (enemy.shape === "frigate") drawFrigateShip(enemy);
 
   ctx.shadowBlur = 0;
+}
+
+function drawEnemySprite(enemy) {
+  const image = enemySpriteImages[enemy.sprite];
+  if (!image || !image.complete || !image.naturalWidth) return false;
+
+  const width = enemy.spriteWidth;
+  const height = width * (image.naturalHeight / image.naturalWidth);
+  ctx.save();
+  ctx.shadowColor = enemy.color;
+  ctx.shadowBlur = 12;
+  ctx.drawImage(image, -width / 2, -height / 2, width, height);
+  ctx.shadowBlur = 0;
+
+  ctx.globalCompositeOperation = "screen";
+  const pulse = 0.25 + Math.sin(state.time * 8 + enemy.spin) * 0.08;
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = enemy.accent;
+  ctx.beginPath();
+  ctx.ellipse(-width * 0.42, 0, width * 0.2, height * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+  ctx.restore();
+  return true;
 }
 
 function drawNeedleShip(enemy) {

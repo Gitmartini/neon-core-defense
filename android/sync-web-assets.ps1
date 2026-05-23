@@ -7,4 +7,15 @@ Copy-Item -LiteralPath (Join-Path $ProjectRoot "index.html") -Destination (Join-
 Copy-Item -LiteralPath (Join-Path $ProjectRoot "styles.css") -Destination (Join-Path $AssetRoot "styles.css") -Force
 Copy-Item -LiteralPath (Join-Path $ProjectRoot "app.js") -Destination (Join-Path $AssetRoot "app.js") -Force
 
+$ShipAssetSource = Join-Path $ProjectRoot "assets\ships"
+$ShipAssetDestination = Join-Path $AssetRoot "assets\ships"
+$RuntimeAssetRoot = Join-Path $AssetRoot "assets"
+if (Test-Path $RuntimeAssetRoot) {
+  Remove-Item -LiteralPath $RuntimeAssetRoot -Recurse -Force
+}
+if (Test-Path $ShipAssetSource) {
+  New-Item -ItemType Directory -Force -Path (Split-Path $ShipAssetDestination) | Out-Null
+  Copy-Item -LiteralPath $ShipAssetSource -Destination $ShipAssetDestination -Recurse -Force
+}
+
 Write-Host "Android web assets synced."
