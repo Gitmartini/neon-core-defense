@@ -52,7 +52,6 @@ const state = {
   particles: [],
   pulseCharge: 0,
   pulseMax: 100,
-  pulseRadius: 220,
   pulseDamage: 85,
   pulseWave: null,
   pulseFlash: 0,
@@ -589,11 +588,12 @@ function activateEmergencyPulse() {
   if (!state.running || state.paused || state.gameOver || state.pulseCharge < state.pulseMax) return;
 
   const c = center();
+  const pulseRadius = state.tower.range;
   state.pulseCharge = 0;
   state.pulseWave = {
     life: 0.55,
     maxLife: 0.55,
-    radius: state.pulseRadius
+    radius: pulseRadius
   };
   state.pulseFlash = 1;
   state.shake = 18;
@@ -604,7 +604,7 @@ function activateEmergencyPulse() {
 
   for (let i = state.enemyProjectiles.length - 1; i >= 0; i -= 1) {
     const p = state.enemyProjectiles[i];
-    if (Math.hypot(p.x - c.x, p.y - c.y) <= state.pulseRadius + 40) {
+    if (Math.hypot(p.x - c.x, p.y - c.y) <= pulseRadius + 40) {
       burst(p.x, p.y, p.color, 6);
       state.enemyProjectiles.splice(i, 1);
     }
@@ -613,9 +613,9 @@ function activateEmergencyPulse() {
   for (let i = state.enemies.length - 1; i >= 0; i -= 1) {
     const enemy = state.enemies[i];
     const dist = Math.hypot(enemy.x - c.x, enemy.y - c.y);
-    if (dist > state.pulseRadius + enemy.radius) continue;
+    if (dist > pulseRadius + enemy.radius) continue;
 
-    const falloff = 1 - Math.max(0, dist - 60) / Math.max(1, state.pulseRadius - 60);
+    const falloff = 1 - Math.max(0, dist - 60) / Math.max(1, pulseRadius - 60);
     const damage = state.pulseDamage * (0.58 + Math.max(0, falloff) * 0.42);
     enemy.hp -= damage;
     enemy.x += Math.cos(enemy.angle) * -18;
