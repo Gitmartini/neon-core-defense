@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Neon Core Defense Sound Preview</title>
+    <style>
+      body { margin: 0; padding: 24px; background: #070a10; color: #edf8ff; font-family: "Segoe UI", system-ui, sans-serif; }
+      h1 { margin: 0 0 18px; color: #6ff7ff; }
+      .grid { display: grid; gap: 12px; max-width: 860px; }
+      .sound { display: grid; grid-template-columns: minmax(160px, 0.9fr) minmax(220px, 1.1fr) minmax(260px, 1.5fr); gap: 12px; align-items: center; padding: 12px; border: 1px solid rgba(111, 247, 255, 0.28); background: linear-gradient(135deg, rgba(111, 247, 255, 0.1), rgba(255, 95, 199, 0.08)); }
+      strong { color: #a8ff6f; }
+      span { color: #9eb5c5; }
+      audio { width: 100%; }
+      @media (max-width: 760px) { .sound { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h1>Neon Core Defense Sound Preview</h1>
+    <div class="grid">
+      
+      <div class="sound">
+        <strong>Tower Fire</strong>
+        <span>Each turret shot</span>
+        <audio controls src="assets/sounds/tower-fire.wav"></audio>
+      </div>
+      <div class="sound">
+        <strong>Enemy Hit</strong>
+        <span>Projectile damages an enemy</span>
+        <audio controls src="assets/sounds/enemy-hit.wav"></audio>
+      </div>
+      <div class="sound">
+        <strong>Enemy Destroyed</strong>
+        <span>Enemy explodes and awards credits</span>
+        <audio controls src="assets/sounds/enemy-destroyed.wav"></audio>
+      </div>
+      <div class="sound">
+        <strong>Core Damaged</strong>
+        <span>Enemy or artillery shot hurts the core</span>
+        <audio controls src="assets/sounds/core-damaged.wav"></audio>
+      </div>
+      <div class="sound">
+        <strong>Upgrade Purchase</strong>
+        <span>Successful upgrade button tap</span>
+        <audio controls src="assets/sounds/upgrade-purchase.wav"></audio>
+      </div>
+      <div class="sound">
+        <strong>Wave Start</strong>
+        <span>New wave begins</span>
+        <audio controls src="assets/sounds/wave-start.wav"></audio>
+      </div>
+      <div class="sound">
+        <strong>Pause Toggle</strong>
+        <span>Pause/resume button</span>
+        <audio controls src="assets/sounds/pause-toggle.wav"></audio>
+      </div>
+      <div class="sound">
+        <strong>Game Over</strong>
+        <span>Core destroyed</span>
+        <audio controls src="assets/sounds/game-over.wav"></audio>
+      </div>
+    </div>
+  </body>
+</html>

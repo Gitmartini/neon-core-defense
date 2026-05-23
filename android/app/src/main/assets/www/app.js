@@ -107,6 +107,33 @@ for (const [name, src] of Object.entries(stationSpriteSources)) {
   stationSpriteImages[name] = image;
 }
 
+const soundSources = {
+  towerFire: "assets/sounds/tower-fire.wav",
+  enemyHit: "assets/sounds/enemy-hit.wav",
+  enemyDestroyed: "assets/sounds/enemy-destroyed.wav",
+  coreDamaged: "assets/sounds/core-damaged.wav",
+  upgradePurchase: "assets/sounds/upgrade-purchase.wav",
+  waveStart: "assets/sounds/wave-start.wav",
+  pauseToggle: "assets/sounds/pause-toggle.wav",
+  gameOver: "assets/sounds/game-over.wav"
+};
+
+const soundPools = {};
+const soundLastPlayed = {};
+let audioUnlocked = false;
+
+for (const [name, src] of Object.entries(soundSources)) {
+  const count = name === "towerFire" ? 8 : name === "enemyHit" ? 5 : 3;
+  soundPools[name] = {
+    cursor: 0,
+    items: Array.from({ length: count }, () => {
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      return audio;
+    })
+  };
+}
+
 const enemyTypes = {
   interceptor: {
     radius: 10,
@@ -227,6 +254,7 @@ function resetGame() {
   state.tower.range = 245;
   state.tower.split = 1;
   ui.overlay.classList.add("hidden");
+  playSound("waveStart", { volume: 0.42, cooldown: 500 });
   updateUi();
 }
 
@@ -305,6 +333,7 @@ function nextWave() {
   state.spawnTimer = 0.4;
   state.waveBreak = 1.4;
   state.credits += 18 + state.wave * 3;
+  playSound("waveStart", { volume: 0.42, cooldown: 500 });
   burst(center().x, center().y, colors.lime, 22);
 }
 
@@ -346,6 +375,7 @@ function fireAt(target) {
   state.tower.cooldown = state.tower.fireDelay;
   const firstMuzzle = gunMuzzlePoint(0);
   burst(firstMuzzle.x, firstMuzzle.y, colors.cyan, 5);
+  playSound("towerFire", { volume: 0.32, rate: rand(0.94, 1.06), cooldown: 35 });
 }
 
 function angleDifference(a, b) {
@@ -364,6 +394,45 @@ function gunMuzzlePoint(index) {
     x: c.x + Math.cos(mountAngle) * 88 + Math.cos(aimAngle) * 38,
     y: c.y + Math.sin(mountAngle) * 88 + Math.sin(aimAngle) * 38
   };
+}
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+
+  for (const pool of Object.values(soundPools)) {
+    const audio = pool.items[pool.items.length - 1];
+    audio.muted = true;
+    audio.play()
+      .then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.muted = false;
+      })
+      .catch(() => {
+        audio.muted = false;
+      });
+  }
+}
+
+function playSound(name, options = {}) {
+  if (!audioUnlocked) return;
+
+  const pool = soundPools[name];
+  if (!pool) return;
+
+  const now = performance.now();
+  const cooldown = options.cooldown ?? 0;
+  if (cooldown && now - (soundLastPlayed[name] || 0) < cooldown) return;
+  soundLastPlayed[name] = now;
+
+  const audio = pool.items[pool.cursor];
+  pool.cursor = (pool.cursor + 1) % pool.items.length;
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = options.volume ?? 0.55;
+  audio.playbackRate = options.rate ?? 1;
+  audio.play().catch(() => {});
 }
 
 function burst(x, y, color, count) {
@@ -439,6 +508,7 @@ function updateEnemies(dt) {
     if (Math.hypot(enemy.x - c.x, enemy.y - c.y) < enemy.radius + 34) {
       state.health = Math.max(0, state.health - enemy.damage);
       state.shake = 9;
+      playSound("coreDamaged", { volume: 0.62, cooldown: 180 });
       burst(enemy.x, enemy.y, colors.red, 20);
       state.enemies.splice(i, 1);
       if (state.health <= 0) endGame();
@@ -480,8 +550,11 @@ function updateProjectiles(dt) {
         if (enemy.hp <= 0) {
           state.score += Math.round(enemy.value * 10 + state.wave * 8);
           state.credits += enemy.value;
+          playSound("enemyDestroyed", { volume: 0.52, rate: rand(0.92, 1.08), cooldown: 55 });
           burst(enemy.x, enemy.y, enemy.color, 24);
           state.enemies.splice(j, 1);
+        } else {
+          playSound("enemyHit", { volume: 0.36, rate: rand(0.94, 1.1), cooldown: 35 });
         }
         break;
       }
@@ -504,6 +577,7 @@ function updateEnemyProjectiles(dt) {
     if (Math.hypot(p.x - c.x, p.y - c.y) < p.radius + 30) {
       state.health = Math.max(0, state.health - p.damage);
       state.shake = 6;
+      playSound("coreDamaged", { volume: 0.58, cooldown: 180 });
       burst(p.x, p.y, colors.red, 14);
       state.enemyProjectiles.splice(i, 1);
       if (state.health <= 0) endGame();
@@ -531,6 +605,7 @@ function updateParticles(dt) {
 function endGame() {
   state.running = false;
   state.gameOver = true;
+  playSound("gameOver", { volume: 0.62, cooldown: 800 });
   ui.overlay.classList.remove("hidden");
   ui.overlay.querySelector(".kicker").textContent = "Core Offline";
   ui.overlay.querySelector("h1").textContent = "Defense Broken";
@@ -559,6 +634,7 @@ function buyUpgrade(kind) {
   if (kind === "repair") state.repairRate += 0.85;
   if (kind === "patch") state.health = Math.min(state.maxHealth, state.health + 45);
 
+  playSound("upgradePurchase", { volume: 0.46, cooldown: 80 });
   burst(center().x, center().y, colors.amber, 16);
   updateUi();
 }
@@ -566,6 +642,7 @@ function buyUpgrade(kind) {
 function togglePause() {
   if (!state.running || state.gameOver) return;
   state.paused = !state.paused;
+  playSound("pauseToggle", { volume: 0.4, rate: state.paused ? 0.82 : 1.12, cooldown: 80 });
   state.last = performance.now();
   updateUi();
 }
@@ -1158,6 +1235,7 @@ function loop(now) {
 }
 
 ui.startButton.addEventListener("click", () => {
+  unlockAudio();
   ui.overlay.querySelector(".kicker").textContent = "Single Tower Defense";
   ui.overlay.querySelector("h1").textContent = "Neon Core Defense";
   ui.startButton.textContent = "Start Defense";
