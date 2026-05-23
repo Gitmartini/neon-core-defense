@@ -34,6 +34,7 @@ const state = {
   credits: 70,
   enemies: [],
   projectiles: [],
+  enemyProjectiles: [],
   particles: [],
   spawnTimer: 0,
   spawnBudget: 0,
@@ -46,6 +47,7 @@ const state = {
   },
   tower: {
     angle: 0,
+    gunAngles: [0, Math.PI / 2, Math.PI, Math.PI * 1.5],
     cooldown: 0,
     damage: 16,
     fireDelay: 0.42,
@@ -59,8 +61,64 @@ const colors = {
   lime: "#a8ff6f",
   pink: "#ff5fc7",
   amber: "#ffd36a",
+  violet: "#b28cff",
+  orange: "#ff9f43",
   red: "#ff596f",
   dark: "#05080d"
+};
+
+const enemyTypes = {
+  interceptor: {
+    radius: 12,
+    hp: 25,
+    hpScale: 5,
+    speed: 104,
+    speedScale: 5,
+    value: 12,
+    damage: 6,
+    color: colors.pink,
+    accent: colors.cyan,
+    shape: "needle"
+  },
+  raider: {
+    radius: 15,
+    hp: 43,
+    hpScale: 8,
+    speed: 58,
+    speedScale: 3,
+    value: 16,
+    damage: 9,
+    color: colors.cyan,
+    accent: colors.lime,
+    shape: "saucer"
+  },
+  dreadnought: {
+    radius: 23,
+    hp: 92,
+    hpScale: 15,
+    speed: 31,
+    speedScale: 2,
+    value: 29,
+    damage: 16,
+    color: colors.amber,
+    accent: colors.orange,
+    shape: "barge"
+  },
+  artillery: {
+    radius: 18,
+    hp: 58,
+    hpScale: 10,
+    speed: 45,
+    speedScale: 2.5,
+    value: 24,
+    damage: 0,
+    color: colors.violet,
+    accent: colors.pink,
+    shape: "frigate",
+    stopRange: 285,
+    fireDelay: 2.1,
+    shotDamage: 7
+  }
 };
 
 function resize() {
@@ -85,6 +143,7 @@ function resetGame() {
   state.credits = 70;
   state.enemies = [];
   state.projectiles = [];
+  state.enemyProjectiles = [];
   state.particles = [];
   state.spawnBudget = 10;
   state.spawnTimer = 0.2;
@@ -130,25 +189,41 @@ function spawnEnemy() {
   }
 
   const waveBoost = state.wave - 1;
-  const typeRoll = Math.random();
-  const isTank = state.wave > 3 && typeRoll > 0.78;
-  const isRunner = state.wave > 2 && typeRoll < 0.18;
-  const radius = isTank ? 18 : isRunner ? 9 : 13;
-  const hp = isTank ? 75 + waveBoost * 12 : isRunner ? 24 + waveBoost * 5 : 40 + waveBoost * 8;
-  const speed = isTank ? 32 + waveBoost * 2 : isRunner ? 96 + waveBoost * 5 : 56 + waveBoost * 3;
+  const type = chooseEnemyType();
+  const template = enemyTypes[type];
+  const hp = template.hp + waveBoost * template.hpScale;
+  const speed = template.speed + waveBoost * template.speedScale;
+  const angleToCore = Math.atan2(state.height / 2 - y, state.width / 2 - x);
 
   state.enemies.push({
     x,
     y,
-    radius,
+    type,
+    shape: template.shape,
+    radius: template.radius,
     hp,
     maxHp: hp,
     speed,
-    value: isTank ? 24 : isRunner ? 11 : 15,
-    damage: isTank ? 14 : isRunner ? 6 : 9,
-    color: isTank ? colors.amber : isRunner ? colors.pink : colors.cyan,
-    spin: rand(0, Math.PI * 2)
+    value: template.value,
+    damage: template.damage,
+    color: template.color,
+    accent: template.accent,
+    angle: angleToCore,
+    spin: rand(0, Math.PI * 2),
+    strafe: rand(-1, 1),
+    cooldown: rand(0.5, 1.8),
+    stopRange: template.stopRange || 0,
+    fireDelay: template.fireDelay || 0,
+    shotDamage: template.shotDamage || 0
   });
+}
+
+function chooseEnemyType() {
+  const roll = Math.random();
+  if (state.wave > 4 && roll > 0.82) return "artillery";
+  if (state.wave > 3 && roll > 0.64) return "dreadnought";
+  if (state.wave > 2 && roll < 0.22) return "interceptor";
+  return "raider";
 }
 
 function nextWave() {
@@ -179,13 +254,18 @@ function fireAt(target) {
   const baseAngle = Math.atan2(target.y - c.y, target.x - c.x);
   const shots = state.tower.split;
   const spread = shots === 1 ? 0 : 0.16;
+  const gunAngles = state.tower.gunAngles.map((angle) => ({
+    angle,
+    diff: Math.abs(angleDifference(angle, baseAngle))
+  })).sort((a, b) => a.diff - b.diff);
 
   for (let i = 0; i < shots; i += 1) {
     const offset = (i - (shots - 1) / 2) * spread;
     const angle = baseAngle + offset;
+    const muzzleAngle = gunAngles[i % gunAngles.length].angle;
     state.projectiles.push({
-      x: c.x + Math.cos(angle) * 28,
-      y: c.y + Math.sin(angle) * 28,
+      x: c.x + Math.cos(muzzleAngle) * 43,
+      y: c.y + Math.sin(muzzleAngle) * 43,
       vx: Math.cos(angle) * 720,
       vy: Math.sin(angle) * 720,
       damage: state.tower.damage,
@@ -197,7 +277,11 @@ function fireAt(target) {
 
   state.tower.angle = baseAngle;
   state.tower.cooldown = state.tower.fireDelay;
-  burst(c.x + Math.cos(baseAngle) * 36, c.y + Math.sin(baseAngle) * 36, colors.cyan, 5);
+  burst(c.x + Math.cos(baseAngle) * 43, c.y + Math.sin(baseAngle) * 43, colors.cyan, 5);
+}
+
+function angleDifference(a, b) {
+  return Math.atan2(Math.sin(a - b), Math.cos(a - b));
 }
 
 function burst(x, y, color, count) {
@@ -244,6 +328,7 @@ function update(dt) {
 
   updateEnemies(dt);
   updateProjectiles(dt);
+  updateEnemyProjectiles(dt);
   updateParticles(dt);
   updateUi();
 }
@@ -252,12 +337,23 @@ function updateEnemies(dt) {
   const c = center();
   for (let i = state.enemies.length - 1; i >= 0; i -= 1) {
     const enemy = state.enemies[i];
+    const dist = Math.hypot(enemy.x - c.x, enemy.y - c.y);
     const angle = Math.atan2(c.y - enemy.y, c.x - enemy.x);
-    enemy.x += Math.cos(angle) * enemy.speed * dt;
-    enemy.y += Math.sin(angle) * enemy.speed * dt;
-    enemy.spin += dt * 4;
+    enemy.angle = angle;
+    enemy.spin += dt * (enemy.type === "dreadnought" ? 1.3 : 3.2);
+    enemy.cooldown = Math.max(0, enemy.cooldown - dt);
 
-    if (Math.hypot(enemy.x - c.x, enemy.y - c.y) < enemy.radius + 29) {
+    if (enemy.type === "artillery" && dist <= enemy.stopRange) {
+      const tangent = angle + Math.PI / 2;
+      enemy.x += Math.cos(tangent) * enemy.speed * 0.26 * enemy.strafe * dt;
+      enemy.y += Math.sin(tangent) * enemy.speed * 0.26 * enemy.strafe * dt;
+      if (enemy.cooldown <= 0) fireEnemyBolt(enemy);
+    } else {
+      enemy.x += Math.cos(angle) * enemy.speed * dt;
+      enemy.y += Math.sin(angle) * enemy.speed * dt;
+    }
+
+    if (Math.hypot(enemy.x - c.x, enemy.y - c.y) < enemy.radius + 34) {
       state.health = Math.max(0, state.health - enemy.damage);
       state.shake = 9;
       burst(enemy.x, enemy.y, colors.red, 20);
@@ -265,6 +361,23 @@ function updateEnemies(dt) {
       if (state.health <= 0) endGame();
     }
   }
+}
+
+function fireEnemyBolt(enemy) {
+  const c = center();
+  const angle = Math.atan2(c.y - enemy.y, c.x - enemy.x);
+  enemy.cooldown = enemy.fireDelay;
+  state.enemyProjectiles.push({
+    x: enemy.x + Math.cos(angle) * enemy.radius,
+    y: enemy.y + Math.sin(angle) * enemy.radius,
+    vx: Math.cos(angle) * 235,
+    vy: Math.sin(angle) * 235,
+    damage: enemy.shotDamage,
+    life: 2.2,
+    radius: 5,
+    color: enemy.accent
+  });
+  burst(enemy.x + Math.cos(angle) * enemy.radius, enemy.y + Math.sin(angle) * enemy.radius, enemy.accent, 5);
 }
 
 function updateProjectiles(dt) {
@@ -293,6 +406,29 @@ function updateProjectiles(dt) {
 
     if (hit || p.life <= 0 || p.x < -50 || p.y < -50 || p.x > state.width + 50 || p.y > state.height + 50) {
       state.projectiles.splice(i, 1);
+    }
+  }
+}
+
+function updateEnemyProjectiles(dt) {
+  const c = center();
+  for (let i = state.enemyProjectiles.length - 1; i >= 0; i -= 1) {
+    const p = state.enemyProjectiles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= dt;
+
+    if (Math.hypot(p.x - c.x, p.y - c.y) < p.radius + 30) {
+      state.health = Math.max(0, state.health - p.damage);
+      state.shake = 6;
+      burst(p.x, p.y, colors.red, 14);
+      state.enemyProjectiles.splice(i, 1);
+      if (state.health <= 0) endGame();
+      continue;
+    }
+
+    if (p.life <= 0 || p.x < -50 || p.y < -50 || p.x > state.width + 50 || p.y > state.height + 50) {
+      state.enemyProjectiles.splice(i, 1);
     }
   }
 }
@@ -367,6 +503,7 @@ function draw() {
   drawRange();
   drawEnemies();
   drawProjectiles();
+  drawEnemyProjectiles();
   drawTower();
   drawParticles();
   ctx.restore();
@@ -422,28 +559,48 @@ function drawTower() {
   ctx.save();
   ctx.translate(c.x, c.y);
 
-  ctx.beginPath();
-  ctx.arc(0, 0, 34, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(111, 247, 255, 0.16)";
-  ctx.fill();
-  ctx.strokeStyle = colors.cyan;
-  ctx.lineWidth = 3;
+  const ringPulse = Math.sin(state.time * 2.4) * 0.5 + 0.5;
   ctx.shadowColor = colors.cyan;
-  ctx.shadowBlur = 18;
+  ctx.shadowBlur = 22;
+  ctx.beginPath();
+  ctx.arc(0, 0, 48, 0, Math.PI * 2);
+  ctx.arc(0, 0, 25, 0, Math.PI * 2, true);
+  ctx.fillStyle = "rgba(111, 247, 255, 0.12)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(216, 251, 255, 0.8)";
+  ctx.lineWidth = 3;
   ctx.stroke();
 
-  ctx.rotate(state.tower.angle);
-  ctx.fillStyle = "#dffbff";
-  ctx.shadowColor = colors.lime;
-  ctx.shadowBlur = 18;
-  ctx.fillRect(8, -6, 44, 12);
-  ctx.fillStyle = colors.pink;
-  ctx.fillRect(38, -3, 14, 6);
+  ctx.shadowBlur = 0;
+  for (let i = 0; i < 16; i += 1) {
+    const angle = (Math.PI * 2 * i) / 16 + state.time * 0.08;
+    const inner = 27;
+    const outer = i % 2 ? 44 : 49;
+    ctx.strokeStyle = i % 4 === 0 ? colors.lime : "rgba(111, 247, 255, 0.55)";
+    ctx.lineWidth = i % 4 === 0 ? 3 : 1.5;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+    ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < state.tower.gunAngles.length; i += 1) {
+    const current = state.tower.gunAngles[i];
+    const targetDiff = angleDifference(state.tower.angle, current);
+    state.tower.gunAngles[i] += targetDiff * 0.09;
+    drawStationGun(state.tower.gunAngles[i]);
+  }
+
+  ctx.beginPath();
+  ctx.arc(0, 0, 18 + ringPulse * 2, 0, Math.PI * 2);
+  ctx.strokeStyle = colors.lime;
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
   ctx.restore();
 
   ctx.beginPath();
-  ctx.arc(c.x, c.y, 14 + Math.sin(state.time * 5) * 2, 0, Math.PI * 2);
+  ctx.arc(c.x, c.y, 11 + Math.sin(state.time * 5) * 2, 0, Math.PI * 2);
   ctx.fillStyle = colors.lime;
   ctx.shadowColor = colors.lime;
   ctx.shadowBlur = 18;
@@ -451,28 +608,32 @@ function drawTower() {
   ctx.shadowBlur = 0;
 }
 
+function drawStationGun(angle) {
+  ctx.save();
+  ctx.rotate(angle);
+  ctx.translate(47, 0);
+  ctx.fillStyle = "rgba(9, 13, 20, 0.95)";
+  ctx.strokeStyle = colors.cyan;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = colors.cyan;
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.roundRect(-7, -8, 18, 16, 4);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#dffbff";
+  ctx.fillRect(5, -4, 27, 8);
+  ctx.fillStyle = colors.pink;
+  ctx.fillRect(25, -2, 9, 4);
+  ctx.restore();
+}
+
 function drawEnemies() {
   for (const enemy of state.enemies) {
     ctx.save();
     ctx.translate(enemy.x, enemy.y);
-    ctx.rotate(enemy.spin);
-    ctx.beginPath();
-    for (let i = 0; i < 6; i += 1) {
-      const angle = (Math.PI * 2 * i) / 6;
-      const r = i % 2 ? enemy.radius * 0.78 : enemy.radius;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-    ctx.strokeStyle = enemy.color;
-    ctx.lineWidth = 3;
-    ctx.shadowColor = enemy.color;
-    ctx.shadowBlur = 12;
-    ctx.fill();
-    ctx.stroke();
+    ctx.rotate(enemy.angle);
+    drawShipHull(enemy);
     ctx.restore();
 
     const hpPct = enemy.hp / enemy.maxHp;
@@ -483,6 +644,124 @@ function drawEnemies() {
   }
 }
 
+function drawShipHull(enemy) {
+  ctx.shadowColor = enemy.color;
+  ctx.shadowBlur = 13;
+  ctx.lineWidth = 2.3;
+  ctx.strokeStyle = enemy.color;
+  ctx.fillStyle = "rgba(214, 238, 255, 0.08)";
+
+  if (enemy.shape === "needle") drawNeedleShip(enemy);
+  if (enemy.shape === "saucer") drawSaucerShip(enemy);
+  if (enemy.shape === "barge") drawBargeShip(enemy);
+  if (enemy.shape === "frigate") drawFrigateShip(enemy);
+
+  ctx.shadowBlur = 0;
+}
+
+function drawNeedleShip(enemy) {
+  const r = enemy.radius;
+  ctx.beginPath();
+  ctx.moveTo(r * 1.8, 0);
+  ctx.lineTo(-r * 0.8, -r * 0.55);
+  ctx.lineTo(-r * 0.35, 0);
+  ctx.lineTo(-r * 0.8, r * 0.55);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = enemy.accent;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.95, -r * 0.35);
+  ctx.lineTo(-r * 1.45, -r * 0.85);
+  ctx.moveTo(-r * 0.95, r * 0.35);
+  ctx.lineTo(-r * 1.45, r * 0.85);
+  ctx.stroke();
+  drawEngineFlare(-r * 1.05, 0, enemy.accent);
+}
+
+function drawSaucerShip(enemy) {
+  const r = enemy.radius;
+  ctx.save();
+  ctx.scale(1.35, 0.72);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = enemy.accent;
+  ctx.beginPath();
+  ctx.moveTo(r * 1.4, 0);
+  ctx.lineTo(r * 0.45, 0);
+  ctx.moveTo(-r * 0.85, -r * 0.35);
+  ctx.lineTo(-r * 1.55, -r * 0.55);
+  ctx.moveTo(-r * 0.85, r * 0.35);
+  ctx.lineTo(-r * 1.55, r * 0.55);
+  ctx.stroke();
+  drawEngineFlare(-r * 1.25, 0, enemy.accent);
+}
+
+function drawBargeShip(enemy) {
+  const r = enemy.radius;
+  ctx.beginPath();
+  ctx.moveTo(r * 1.35, 0);
+  ctx.lineTo(r * 0.52, -r * 0.78);
+  ctx.lineTo(-r * 1.25, -r * 0.62);
+  ctx.lineTo(-r * 1.45, 0);
+  ctx.lineTo(-r * 1.25, r * 0.62);
+  ctx.lineTo(r * 0.52, r * 0.78);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = enemy.accent;
+  for (let i = -1; i <= 1; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.85, i * r * 0.35);
+    ctx.lineTo(r * 0.65, i * r * 0.22);
+    ctx.stroke();
+  }
+  drawEngineFlare(-r * 1.48, -r * 0.3, enemy.accent);
+  drawEngineFlare(-r * 1.48, r * 0.3, enemy.accent);
+}
+
+function drawFrigateShip(enemy) {
+  const r = enemy.radius;
+  ctx.beginPath();
+  ctx.moveTo(r * 1.55, 0);
+  ctx.lineTo(r * 0.25, -r * 0.62);
+  ctx.lineTo(-r * 1.3, -r * 0.28);
+  ctx.lineTo(-r * 1.52, 0);
+  ctx.lineTo(-r * 1.3, r * 0.28);
+  ctx.lineTo(r * 0.25, r * 0.62);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = enemy.accent;
+  ctx.beginPath();
+  ctx.moveTo(r * 0.2, 0);
+  ctx.lineTo(r * 1.85, 0);
+  ctx.moveTo(-r * 0.45, -r * 0.75);
+  ctx.lineTo(-r * 1.1, -r * 1.05);
+  ctx.moveTo(-r * 0.45, r * 0.75);
+  ctx.lineTo(-r * 1.1, r * 1.05);
+  ctx.stroke();
+  drawEngineFlare(-r * 1.45, 0, enemy.accent);
+}
+
+function drawEngineFlare(x, y, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.beginPath();
+  ctx.moveTo(0, -4);
+  ctx.lineTo(-12 - Math.sin(state.time * 16) * 4, 0);
+  ctx.lineTo(0, 4);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.65;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 function drawProjectiles() {
   for (const p of state.projectiles) {
     ctx.beginPath();
@@ -491,6 +770,24 @@ function drawProjectiles() {
     ctx.shadowColor = p.color;
     ctx.shadowBlur = 16;
     ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawEnemyProjectiles() {
+  for (const p of state.enemyProjectiles) {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 18;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(p.x - p.vx * 0.035, p.y - p.vy * 0.035);
+    ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
     ctx.shadowBlur = 0;
   }
 }
