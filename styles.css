@@ -45,25 +45,25 @@ button {
   height: 100dvh;
   min-height: 0;
   margin: 0 auto;
-  padding: 4px 0;
+  padding: 3px 0;
   display: grid;
-  grid-template-columns: minmax(112px, 0.17fr) minmax(0, 1fr) minmax(180px, 0.27fr);
+  grid-template-columns: minmax(90px, 0.14fr) minmax(0, 1fr) minmax(144px, 0.22fr);
   grid-template-rows: minmax(0, 1fr);
-  gap: 6px;
+  gap: 5px;
   background: linear-gradient(90deg, rgba(29, 42, 56, 0.7), transparent 18%, transparent 82%, rgba(29, 42, 56, 0.7));
 }
 
 .hud,
 .controls {
   display: grid;
-  gap: 6px;
+  gap: 5px;
 }
 
 .hud {
   grid-column: 1;
   grid-row: 1;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(62px, 1.25fr) repeat(3, minmax(45px, 0.8fr)) minmax(42px, 0.7fr);
+  grid-template-rows: minmax(50px, 1.25fr) repeat(3, minmax(36px, 0.8fr)) minmax(34px, 0.7fr);
   align-content: stretch;
 }
 
@@ -85,27 +85,27 @@ button {
 .hud > div {
   min-width: 0;
   min-height: 0;
-  padding: 6px 7px;
+  padding: 5px 6px;
   border-radius: 4px;
 }
 
 .pause-button {
   min-width: 0;
   min-height: 0;
-  padding: 0 8px;
+  padding: 0 6px;
   border-radius: 4px;
   border: 1px solid var(--line);
   color: var(--text);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.64rem;
   font-weight: 800;
 }
 
 .label,
 .kicker {
-  margin: 0 0 3px;
+  margin: 0 0 2px;
   color: var(--muted);
-  font-size: 0.66rem;
+  font-size: 0.53rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -115,13 +115,13 @@ button {
   display: block;
   min-height: 1rem;
   color: #ffffff;
-  font-size: 1.15rem;
+  font-size: 0.92rem;
   line-height: 1.05;
   text-shadow: 0 0 9px rgba(111, 247, 255, 0.42);
 }
 
 .meter {
-  height: 10px;
+  height: 8px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
@@ -251,7 +251,7 @@ canvas {
 .upgrade {
   min-height: 0;
   min-width: 0;
-  padding: 5px 6px;
+  padding: 4px 5px;
   border-radius: 4px;
   text-align: left;
 }
@@ -268,21 +268,21 @@ canvas {
 
 .upgrade span {
   color: var(--cyan);
-  font-size: 0.72rem;
+  font-size: 0.58rem;
   font-weight: 800;
   line-height: 1.05;
 }
 
 .upgrade strong {
-  margin: 2px 0;
+  margin: 1px 0;
   color: var(--lime);
-  font-size: 1rem;
+  font-size: 0.8rem;
   line-height: 1;
 }
 
 .upgrade small {
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: 0.5rem;
   line-height: 1.05;
 }
 

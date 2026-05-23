@@ -95,6 +95,18 @@ for (const [name, src] of Object.entries(enemySpriteSources)) {
   enemySpriteImages[name] = image;
 }
 
+const stationSpriteSources = {
+  base: "assets/station/station.png",
+  gun: "assets/station/gun.png"
+};
+
+const stationSpriteImages = {};
+for (const [name, src] of Object.entries(stationSpriteSources)) {
+  const image = new Image();
+  image.src = src;
+  stationSpriteImages[name] = image;
+}
+
 const enemyTypes = {
   interceptor: {
     radius: 10,
@@ -700,6 +712,64 @@ function drawTower() {
   ctx.translate(c.x, c.y);
 
   const ringPulse = Math.sin(state.time * 2.4) * 0.5 + 0.5;
+  if (!drawStationBaseSprite()) {
+    drawProceduralStationBase();
+  }
+
+  for (let i = 0; i < activeGunCount(); i += 1) {
+    const current = state.tower.gunAngles[i];
+    const base = state.tower.gunBases[i];
+    const mountX = c.x + Math.cos(base) * 88;
+    const mountY = c.y + Math.sin(base) * 88;
+    const targetAngle = Math.atan2(
+      c.y + Math.sin(state.tower.angle) * state.tower.range - mountY,
+      c.x + Math.cos(state.tower.angle) * state.tower.range - mountX
+    );
+    const targetDiff = angleDifference(targetAngle, base);
+    const localLimit = activeGunCount() === 1 ? Math.PI : Math.PI * 0.23;
+    const localAim = Math.max(-localLimit, Math.min(localLimit, targetDiff));
+    const limitedTargetAngle = base + localAim;
+    if (!state.paused) {
+      state.tower.gunAngles[i] = current + angleDifference(limitedTargetAngle, current) * 0.18;
+    }
+    drawStationGun(base, state.tower.gunAngles[i]);
+  }
+
+  ctx.beginPath();
+  ctx.arc(0, 0, 33 + ringPulse * 2, 0, Math.PI * 2);
+  ctx.strokeStyle = colors.lime;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, 29 + Math.sin(state.time * 5) * 2, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(111, 247, 255, 0.2)";
+  ctx.shadowColor = colors.cyan;
+  ctx.shadowBlur = 24;
+  ctx.fill();
+  ctx.strokeStyle = colors.cyan;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+function drawStationBaseSprite() {
+  const image = stationSpriteImages.base;
+  if (!image || !image.complete || !image.naturalWidth) return false;
+
+  const width = 214;
+  const height = width * (image.naturalHeight / image.naturalWidth);
+  ctx.save();
+  ctx.shadowColor = colors.cyan;
+  ctx.shadowBlur = 30;
+  ctx.drawImage(image, -width / 2, -height / 2, width, height);
+  ctx.restore();
+  return true;
+}
+
+function drawProceduralStationBase() {
   ctx.rotate(state.time * 0.06);
   ctx.shadowColor = colors.cyan;
   ctx.shadowBlur = 34;
@@ -756,44 +826,6 @@ function drawTower() {
   }
 
   ctx.rotate(-state.time * 0.06);
-
-  for (let i = 0; i < activeGunCount(); i += 1) {
-    const current = state.tower.gunAngles[i];
-    const base = state.tower.gunBases[i];
-    const mountX = c.x + Math.cos(base) * 88;
-    const mountY = c.y + Math.sin(base) * 88;
-    const targetAngle = Math.atan2(
-      c.y + Math.sin(state.tower.angle) * state.tower.range - mountY,
-      c.x + Math.cos(state.tower.angle) * state.tower.range - mountX
-    );
-    const targetDiff = angleDifference(targetAngle, base);
-    const localLimit = activeGunCount() === 1 ? Math.PI : Math.PI * 0.23;
-    const localAim = Math.max(-localLimit, Math.min(localLimit, targetDiff));
-    const limitedTargetAngle = base + localAim;
-    if (!state.paused) {
-      state.tower.gunAngles[i] = current + angleDifference(limitedTargetAngle, current) * 0.18;
-    }
-    drawStationGun(base, state.tower.gunAngles[i]);
-  }
-
-  ctx.beginPath();
-  ctx.arc(0, 0, 33 + ringPulse * 2, 0, Math.PI * 2);
-  ctx.strokeStyle = colors.lime;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.restore();
-
-  ctx.beginPath();
-  ctx.arc(c.x, c.y, 29 + Math.sin(state.time * 5) * 2, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(111, 247, 255, 0.28)";
-  ctx.shadowColor = colors.cyan;
-  ctx.shadowBlur = 28;
-  ctx.fill();
-  ctx.strokeStyle = colors.cyan;
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
 }
 
 function drawStationGun(mountAngle, aimAngle) {
@@ -801,6 +833,17 @@ function drawStationGun(mountAngle, aimAngle) {
   ctx.rotate(mountAngle);
   ctx.translate(88, 0);
   ctx.rotate(angleDifference(aimAngle, mountAngle));
+  const image = stationSpriteImages.gun;
+  if (image && image.complete && image.naturalWidth) {
+    const width = 62;
+    const height = width * (image.naturalHeight / image.naturalWidth);
+    ctx.shadowColor = colors.cyan;
+    ctx.shadowBlur = 12;
+    ctx.drawImage(image, -25, -height / 2, width, height);
+    ctx.restore();
+    return;
+  }
+
   ctx.fillStyle = "rgba(9, 13, 20, 0.97)";
   ctx.strokeStyle = colors.cyan;
   ctx.lineWidth = 1.6;
