@@ -10,6 +10,8 @@ const ui = {
   credits: document.getElementById("credits"),
   score: document.getElementById("score"),
   overlay: document.getElementById("overlay"),
+  overlayMessage: document.getElementById("overlayMessage"),
+  runReport: document.getElementById("runReport"),
   startButton: document.getElementById("startButton"),
   pauseButton: document.getElementById("pauseButton"),
   damageLevel: document.getElementById("damageLevel"),
@@ -54,6 +56,7 @@ const state = {
   pulseDamage: 85,
   pulseWave: null,
   pulseFlash: 0,
+  runStats: null,
   spawnTimer: 0,
   spawnBudget: 0,
   waveBreak: 1.5,
@@ -88,6 +91,18 @@ const colors = {
   red: "#ff596f",
   dark: "#05080d"
 };
+
+const upgradeLabels = {
+  damage: "Damage",
+  rate: "Fire Rate",
+  range: "Range",
+  split: "Add Gun",
+  hull: "Core HP",
+  repair: "Repair Rate",
+  patch: "Patch Core"
+};
+
+const bestScoreKey = "neonCoreDefense.bestScore";
 
 const enemySpriteSources = {
   interceptor: "assets/ships/interceptor.png",
@@ -248,6 +263,12 @@ function resetGame() {
   state.pulseCharge = 0;
   state.pulseWave = null;
   state.pulseFlash = 0;
+  state.runStats = {
+    enemiesDestroyed: 0,
+    pulsesFired: 0,
+    upgradesBought: Object.fromEntries(Object.keys(state.upgrades).map((kind) => [kind, 0])),
+    lastUpgrade: null
+  };
   state.spawnBudget = 10;
   state.spawnTimer = 0.2;
   state.waveBreak = 1.5;
@@ -267,6 +288,7 @@ function resetGame() {
   state.tower.range = 245;
   state.tower.split = 1;
   ui.overlay.classList.add("hidden");
+  ui.runReport.classList.add("hidden");
   playSound("waveStart", { volume: 0.42, cooldown: 500 });
   updateUi();
 }
@@ -353,6 +375,13 @@ function nextWave() {
 function addPulseCharge(amount) {
   if (!state.running || state.gameOver) return;
   state.pulseCharge = Math.min(state.pulseMax, state.pulseCharge + amount);
+}
+
+function recordEnemyDestroyed(enemy, options = {}) {
+  state.score += Math.round(enemy.value * 10 + state.wave * 8);
+  state.credits += enemy.value;
+  if (state.runStats) state.runStats.enemiesDestroyed += 1;
+  if (options.chargePulse !== false) addPulseCharge(enemy.value * 0.85);
 }
 
 function findTarget() {
@@ -568,6 +597,7 @@ function activateEmergencyPulse() {
   };
   state.pulseFlash = 1;
   state.shake = 18;
+  if (state.runStats) state.runStats.pulsesFired += 1;
   playSound("emergencyPulse", { volume: 0.78, cooldown: 500 });
   burst(c.x, c.y, colors.cyan, 42);
   burst(c.x, c.y, colors.pink, 28);
@@ -593,8 +623,7 @@ function activateEmergencyPulse() {
     burst(enemy.x, enemy.y, colors.cyan, 12);
 
     if (enemy.hp <= 0) {
-      state.score += Math.round(enemy.value * 10 + state.wave * 8);
-      state.credits += enemy.value;
+      recordEnemyDestroyed(enemy, { chargePulse: false });
       burst(enemy.x, enemy.y, enemy.color, 24);
       state.enemies.splice(i, 1);
     }
@@ -618,9 +647,7 @@ function updateProjectiles(dt) {
         burst(p.x, p.y, p.color, 7);
         hit = true;
         if (enemy.hp <= 0) {
-          state.score += Math.round(enemy.value * 10 + state.wave * 8);
-          state.credits += enemy.value;
-          addPulseCharge(enemy.value * 0.85);
+          recordEnemyDestroyed(enemy);
           playSound("enemyDestroyed", { volume: 0.52, rate: rand(0.92, 1.08), cooldown: 55 });
           burst(enemy.x, enemy.y, enemy.color, 24);
           state.enemies.splice(j, 1);
@@ -676,12 +703,51 @@ function updateParticles(dt) {
 function endGame() {
   state.running = false;
   state.gameOver = true;
+  updateUi();
   playSound("gameOver", { volume: 0.62, cooldown: 800 });
+  showRunReport();
+}
+
+function showRunReport() {
+  const previousBest = Number(localStorage.getItem(bestScoreKey) || 0);
+  const isNewBest = state.score > previousBest;
+  const bestScore = isNewBest ? state.score : previousBest;
+  if (isNewBest) localStorage.setItem(bestScoreKey, String(state.score));
+
+  const favorite = favoriteUpgrade();
   ui.overlay.classList.remove("hidden");
   ui.overlay.querySelector(".kicker").textContent = "Core Offline";
-  ui.overlay.querySelector("h1").textContent = "Defense Broken";
-  ui.overlay.querySelector("p").textContent = `Wave ${state.wave} reached. Final score: ${state.score}.`;
-  ui.startButton.textContent = "Restart";
+  ui.overlay.querySelector("h1").textContent = isNewBest ? "New Best!" : "Run Complete";
+  ui.overlayMessage.textContent = isNewBest ? `Score ${formatNumber(state.score)} beat your previous best.` : `Score ${formatNumber(state.score)}. Best: ${formatNumber(bestScore)}.`;
+  ui.runReport.innerHTML = `
+    <div><span>Wave Reached</span><strong>${state.wave}</strong></div>
+    <div><span>Enemies Destroyed</span><strong>${formatNumber(state.runStats?.enemiesDestroyed || 0)}</strong></div>
+    <div><span>Favorite Upgrade</span><strong>${favorite}</strong></div>
+    <div><span>Emergency Pulses</span><strong>${state.runStats?.pulsesFired || 0}</strong></div>
+  `;
+  ui.runReport.classList.remove("hidden");
+  ui.startButton.textContent = "Retry";
+}
+
+function favoriteUpgrade() {
+  const upgrades = state.runStats?.upgradesBought || {};
+  let bestKind = null;
+  let bestCount = 0;
+
+  for (const kind of Object.keys(upgradeLabels)) {
+    const count = upgrades[kind] || 0;
+    if (count > bestCount || (count === bestCount && count > 0 && state.runStats?.lastUpgrade === kind)) {
+      bestKind = kind;
+      bestCount = count;
+    }
+  }
+
+  if (!bestKind) return "None";
+  return `${upgradeLabels[bestKind]} x${bestCount}`;
+}
+
+function formatNumber(value) {
+  return Math.round(value).toLocaleString("en-US");
 }
 
 function buyUpgrade(kind) {
@@ -705,6 +771,10 @@ function buyUpgrade(kind) {
   if (kind === "repair") state.repairRate += 0.85;
   if (kind === "patch") state.health = Math.min(state.maxHealth, state.health + 45);
 
+  if (state.runStats) {
+    state.runStats.upgradesBought[kind] += 1;
+    state.runStats.lastUpgrade = kind;
+  }
   playSound("upgradePurchase", { volume: 0.46, cooldown: 80 });
   burst(center().x, center().y, colors.amber, 16);
   updateUi();
@@ -1354,6 +1424,9 @@ ui.startButton.addEventListener("click", () => {
   unlockAudio();
   ui.overlay.querySelector(".kicker").textContent = "Single Tower Defense";
   ui.overlay.querySelector("h1").textContent = "Neon Core Defense";
+  ui.overlayMessage.textContent = "Hold the center reactor against edge-born drones. Your turret aims and fires automatically.";
+  ui.runReport.classList.add("hidden");
+  ui.runReport.innerHTML = "";
   ui.startButton.textContent = "Start Defense";
   resetGame();
 });

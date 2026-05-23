@@ -284,6 +284,45 @@ canvas {
   font-size: 0.85rem;
 }
 
+.run-report {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0 12px;
+}
+
+.run-report.hidden {
+  display: none;
+}
+
+.run-report div {
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(111, 247, 255, 0.22);
+  background: rgba(3, 7, 12, 0.48);
+  text-align: left;
+}
+
+.run-report span,
+.run-report strong {
+  display: block;
+  line-height: 1.05;
+}
+
+.run-report span {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.run-report strong {
+  color: #ffffff;
+  font-size: 0.86rem;
+  text-shadow: 0 0 10px rgba(111, 247, 255, 0.38);
+}
+
 #startButton,
 .pulse-button,
 .pause-button,
