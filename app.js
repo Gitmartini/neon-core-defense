@@ -82,7 +82,7 @@ const colors = {
 
 const enemyTypes = {
   interceptor: {
-    radius: 12,
+    radius: 10,
     hp: 25,
     hpScale: 5,
     speed: 104,
@@ -94,7 +94,7 @@ const enemyTypes = {
     shape: "needle"
   },
   raider: {
-    radius: 15,
+    radius: 13,
     hp: 43,
     hpScale: 8,
     speed: 58,
@@ -106,7 +106,7 @@ const enemyTypes = {
     shape: "saucer"
   },
   dreadnought: {
-    radius: 23,
+    radius: 20,
     hp: 92,
     hpScale: 15,
     speed: 31,
@@ -118,7 +118,7 @@ const enemyTypes = {
     shape: "barge"
   },
   artillery: {
-    radius: 18,
+    radius: 16,
     hp: 58,
     hpScale: 10,
     speed: 45,
@@ -711,7 +711,11 @@ function drawShipHull(enemy) {
   ctx.shadowBlur = 13;
   ctx.lineWidth = 2.3;
   ctx.strokeStyle = enemy.color;
-  ctx.fillStyle = "rgba(214, 238, 255, 0.08)";
+  const hull = ctx.createLinearGradient(-enemy.radius * 1.8, -enemy.radius, enemy.radius * 1.8, enemy.radius);
+  hull.addColorStop(0, "rgba(216, 251, 255, 0.05)");
+  hull.addColorStop(0.45, "rgba(216, 251, 255, 0.16)");
+  hull.addColorStop(1, "rgba(9, 13, 20, 0.68)");
+  ctx.fillStyle = hull;
 
   if (enemy.shape === "needle") drawNeedleShip(enemy);
   if (enemy.shape === "saucer") drawSaucerShip(enemy);
@@ -738,6 +742,7 @@ function drawNeedleShip(enemy) {
   ctx.moveTo(-r * 0.95, r * 0.35);
   ctx.lineTo(-r * 1.45, r * 0.85);
   ctx.stroke();
+  drawCockpit(r * 0.55, 0, r * 0.22, enemy.accent);
   drawEngineFlare(-r * 1.05, 0, enemy.accent);
 }
 
@@ -759,6 +764,7 @@ function drawSaucerShip(enemy) {
   ctx.moveTo(-r * 0.85, r * 0.35);
   ctx.lineTo(-r * 1.55, r * 0.55);
   ctx.stroke();
+  drawCockpit(r * 0.18, 0, r * 0.28, enemy.accent);
   drawEngineFlare(-r * 1.25, 0, enemy.accent);
 }
 
@@ -781,6 +787,8 @@ function drawBargeShip(enemy) {
     ctx.lineTo(r * 0.65, i * r * 0.22);
     ctx.stroke();
   }
+  drawArmorPlates(r);
+  drawCockpit(r * 0.6, 0, r * 0.18, enemy.accent);
   drawEngineFlare(-r * 1.48, -r * 0.3, enemy.accent);
   drawEngineFlare(-r * 1.48, r * 0.3, enemy.accent);
 }
@@ -806,7 +814,32 @@ function drawFrigateShip(enemy) {
   ctx.moveTo(-r * 0.45, r * 0.75);
   ctx.lineTo(-r * 1.1, r * 1.05);
   ctx.stroke();
+  drawCockpit(r * 0.58, 0, r * 0.2, enemy.accent);
   drawEngineFlare(-r * 1.45, 0, enemy.accent);
+}
+
+function drawCockpit(x, y, radius, color) {
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.78;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawArmorPlates(r) {
+  ctx.strokeStyle = "rgba(216, 251, 255, 0.45)";
+  ctx.lineWidth = 1;
+  for (let i = -1; i <= 1; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.35, i * r * 0.48);
+    ctx.lineTo(r * 0.2, i * r * 0.54);
+    ctx.stroke();
+  }
 }
 
 function drawEngineFlare(x, y, color) {
