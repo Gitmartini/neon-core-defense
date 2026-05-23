@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Neon Core Defense</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hud" aria-label="Game status">
+        <div>
+          <p class="label">Core</p>
+          <div class="meter" aria-label="Core integrity">
+            <span id="healthBar"></span>
+          </div>
+        </div>
+        <div>
+          <p class="label">Wave</p>
+          <strong id="wave">1</strong>
+        </div>
+        <div>
+          <p class="label">Credits</p>
+          <strong id="credits">0</strong>
+        </div>
+        <div>
+          <p class="label">Score</p>
+          <strong id="score">0</strong>
+        </div>
+        <button class="pause-button" id="pauseButton" type="button" disabled>Pause</button>
+      </section>
+
+      <section class="game-wrap" aria-label="Neon Core Defense playfield">
+        <canvas id="game" width="960" height="640"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="panel">
+            <p class="kicker">Single Tower Defense</p>
+            <h1>Neon Core Defense</h1>
+            <p>Hold the center reactor against edge-born drones. Your turret aims and fires automatically.</p>
+            <button id="startButton" type="button">Start Defense</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="Tower upgrades">
+        <button class="upgrade" data-upgrade="damage" type="button">
+          <span>Damage</span>
+          <strong id="damageLevel">1</strong>
+          <small id="damageCost">Cost 40</small>
+        </button>
+        <button class="upgrade" data-upgrade="rate" type="button">
+          <span>Fire Rate</span>
+          <strong id="rateLevel">1</strong>
+          <small id="rateCost">Cost 50</small>
+        </button>
+        <button class="upgrade" data-upgrade="range" type="button">
+          <span>Range</span>
+          <strong id="rangeLevel">1</strong>
+          <small id="rangeCost">Cost 45</small>
+        </button>
+        <button class="upgrade" data-upgrade="split" type="button">
+          <span>Add Gun</span>
+          <strong id="splitLevel">1</strong>
+          <small id="splitCost">Cost 90</small>
+        </button>
+        <button class="upgrade" data-upgrade="hull" type="button">
+          <span>Core HP</span>
+          <strong id="hullLevel">1</strong>
+          <small id="hullCost">Cost 65</small>
+        </button>
+        <button class="upgrade" data-upgrade="repair" type="button">
+          <span>Repair Rate</span>
+          <strong id="repairLevel">1</strong>
+          <small id="repairCost">Cost 55</small>
+        </button>
+        <button class="upgrade" data-upgrade="patch" type="button">
+          <span>Patch Core</span>
+          <strong id="patchLevel">+</strong>
+          <small id="patchCost">Cost 35</small>
+        </button>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
