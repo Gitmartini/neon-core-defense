@@ -3,3 +3,7 @@ screenshot-upgraded.png
 screenshot-latest.png
 screenshot-add-gun.png
 screenshot-repair-pause.png
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
