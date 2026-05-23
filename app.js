@@ -8,22 +8,28 @@ const ui = {
   score: document.getElementById("score"),
   overlay: document.getElementById("overlay"),
   startButton: document.getElementById("startButton"),
+  pauseButton: document.getElementById("pauseButton"),
   damageLevel: document.getElementById("damageLevel"),
   rateLevel: document.getElementById("rateLevel"),
   rangeLevel: document.getElementById("rangeLevel"),
   splitLevel: document.getElementById("splitLevel"),
   hullLevel: document.getElementById("hullLevel"),
+  repairLevel: document.getElementById("repairLevel"),
+  patchLevel: document.getElementById("patchLevel"),
   damageCost: document.getElementById("damageCost"),
   rateCost: document.getElementById("rateCost"),
   rangeCost: document.getElementById("rangeCost"),
   splitCost: document.getElementById("splitCost"),
   hullCost: document.getElementById("hullCost"),
+  repairCost: document.getElementById("repairCost"),
+  patchCost: document.getElementById("patchCost"),
   upgrades: [...document.querySelectorAll(".upgrade")]
 };
 
 const state = {
   running: false,
   gameOver: false,
+  paused: false,
   width: canvas.width,
   height: canvas.height,
   time: 0,
@@ -31,6 +37,7 @@ const state = {
   shake: 0,
   health: 100,
   maxHealth: 100,
+  repairRate: 0.6,
   wave: 1,
   score: 0,
   credits: 70,
@@ -46,7 +53,9 @@ const state = {
     rate: { level: 1, cost: 50 },
     range: { level: 1, cost: 45 },
     split: { level: 1, cost: 90 },
-    hull: { level: 1, cost: 65 }
+    hull: { level: 1, cost: 65 },
+    repair: { level: 1, cost: 55 },
+    patch: { level: "+", cost: 35 }
   },
   tower: {
     angle: 0,
@@ -138,6 +147,7 @@ function resize() {
 function resetGame() {
   state.running = true;
   state.gameOver = false;
+  state.paused = false;
   state.time = 0;
   state.last = performance.now();
   state.shake = 0;
@@ -157,8 +167,11 @@ function resetGame() {
   state.upgrades.range = { level: 1, cost: 45 };
   state.upgrades.split = { level: 1, cost: 90 };
   state.upgrades.hull = { level: 1, cost: 65 };
+  state.upgrades.repair = { level: 1, cost: 55 };
+  state.upgrades.patch = { level: "+", cost: 35 };
   state.maxHealth = 100;
   state.health = state.maxHealth;
+  state.repairRate = 0.6;
   state.tower.gunAngles = [...state.tower.gunBases];
   state.tower.damage = 16;
   state.tower.fireDelay = 0.42;
@@ -311,11 +324,12 @@ function burst(x, y, color, count) {
 }
 
 function update(dt) {
-  if (!state.running) return;
+  if (!state.running || state.paused) return;
 
   state.time += dt;
   state.shake = Math.max(0, state.shake - dt * 22);
   state.tower.cooldown = Math.max(0, state.tower.cooldown - dt);
+  state.health = Math.min(state.maxHealth, state.health + state.repairRate * dt);
 
   if (state.spawnBudget > 0) {
     state.spawnTimer -= dt;
@@ -465,13 +479,14 @@ function endGame() {
 }
 
 function buyUpgrade(kind) {
-  if (!state.running) return;
+  if (!state.running || state.paused) return;
   const upgrade = state.upgrades[kind];
   if (state.credits < upgrade.cost) return;
+  if (kind === "patch" && state.health >= state.maxHealth) return;
 
   state.credits -= upgrade.cost;
-  upgrade.level += 1;
-  upgrade.cost = Math.round(upgrade.cost * 1.55 + 12);
+  if (kind !== "patch") upgrade.level += 1;
+  upgrade.cost = kind === "patch" ? Math.round(upgrade.cost * 1.25 + 8) : Math.round(upgrade.cost * 1.55 + 12);
 
   if (kind === "damage") state.tower.damage += 7;
   if (kind === "rate") state.tower.fireDelay = Math.max(0.13, state.tower.fireDelay * 0.84);
@@ -481,8 +496,17 @@ function buyUpgrade(kind) {
     state.maxHealth += 25;
     state.health = Math.min(state.maxHealth, state.health + 35);
   }
+  if (kind === "repair") state.repairRate += 0.85;
+  if (kind === "patch") state.health = Math.min(state.maxHealth, state.health + 45);
 
   burst(center().x, center().y, colors.amber, 16);
+  updateUi();
+}
+
+function togglePause() {
+  if (!state.running || state.gameOver) return;
+  state.paused = !state.paused;
+  state.last = performance.now();
   updateUi();
 }
 
@@ -492,6 +516,8 @@ function updateUi() {
   ui.wave.textContent = state.wave;
   ui.credits.textContent = state.credits;
   ui.score.textContent = state.score;
+  ui.pauseButton.disabled = !state.running || state.gameOver;
+  ui.pauseButton.textContent = state.paused ? "Resume" : "Pause";
 
   for (const kind of Object.keys(state.upgrades)) {
     ui[`${kind}Level`].textContent = state.upgrades[kind].level;
@@ -500,7 +526,7 @@ function updateUi() {
 
   ui.upgrades.forEach((button) => {
     const kind = button.dataset.upgrade;
-    button.disabled = !state.running || state.credits < state.upgrades[kind].cost || (kind === "split" && state.tower.split >= state.tower.gunBases.length);
+    button.disabled = !state.running || state.paused || state.credits < state.upgrades[kind].cost || (kind === "split" && state.tower.split >= state.tower.gunBases.length) || (kind === "patch" && state.health >= state.maxHealth);
   });
 }
 
@@ -604,7 +630,9 @@ function drawTower() {
     const localLimit = activeGunCount() === 1 ? Math.PI : Math.PI * 0.23;
     const localAim = Math.max(-localLimit, Math.min(localLimit, targetDiff));
     const targetAngle = base + localAim;
-    state.tower.gunAngles[i] = current + angleDifference(targetAngle, current) * 0.12;
+    if (!state.paused) {
+      state.tower.gunAngles[i] = current + angleDifference(targetAngle, current) * 0.12;
+    }
     drawStationGun(state.tower.gunAngles[i]);
   }
 
@@ -836,6 +864,8 @@ ui.startButton.addEventListener("click", () => {
   ui.startButton.textContent = "Start Defense";
   resetGame();
 });
+
+ui.pauseButton.addEventListener("click", togglePause);
 
 ui.upgrades.forEach((button) => {
   button.addEventListener("click", () => buyUpgrade(button.dataset.upgrade));

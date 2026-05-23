@@ -27,6 +27,7 @@
           <p class="label">Score</p>
           <strong id="score">0</strong>
         </div>
+        <button class="pause-button" id="pauseButton" type="button" disabled>Pause</button>
       </section>
 
       <section class="game-wrap" aria-label="Neon Core Defense playfield">
@@ -66,6 +67,16 @@
           <span>Core HP</span>
           <strong id="hullLevel">1</strong>
           <small id="hullCost">Cost 65</small>
+        </button>
+        <button class="upgrade" data-upgrade="repair" type="button">
+          <span>Repair Rate</span>
+          <strong id="repairLevel">1</strong>
+          <small id="repairCost">Cost 55</small>
+        </button>
+        <button class="upgrade" data-upgrade="patch" type="button">
+          <span>Patch Core</span>
+          <strong id="patchLevel">+</strong>
+          <small id="patchCost">Cost 35</small>
         </button>
       </section>
     </main>

@@ -53,11 +53,12 @@ button {
 }
 
 .hud {
-  grid-template-columns: minmax(170px, 1.4fr) repeat(3, minmax(84px, 0.45fr));
+  grid-template-columns: minmax(170px, 1.4fr) repeat(3, minmax(84px, 0.45fr)) minmax(92px, 0.35fr);
   align-items: stretch;
 }
 
 .hud > div,
+.pause-button,
 .upgrade,
 .panel {
   border: 1px solid var(--line);
@@ -69,6 +70,17 @@ button {
   min-width: 0;
   padding: 10px 12px;
   border-radius: 8px;
+}
+
+.pause-button {
+  min-width: 0;
+  min-height: 54px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
 }
 
 .label,
@@ -156,6 +168,7 @@ canvas {
 }
 
 #startButton,
+.pause-button,
 .upgrade {
   cursor: pointer;
   color: var(--text);
@@ -172,13 +185,14 @@ canvas {
 }
 
 #startButton:hover,
+.pause-button:hover:not(:disabled),
 .upgrade:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: rgba(168, 255, 111, 0.76);
 }
 
 .controls {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
 .upgrade {
@@ -210,6 +224,7 @@ canvas {
   color: var(--muted);
 }
 
+.pause-button:disabled,
 .upgrade:disabled {
   cursor: not-allowed;
   opacity: 0.45;
