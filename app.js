@@ -12,10 +12,12 @@ const ui = {
   rateLevel: document.getElementById("rateLevel"),
   rangeLevel: document.getElementById("rangeLevel"),
   splitLevel: document.getElementById("splitLevel"),
+  hullLevel: document.getElementById("hullLevel"),
   damageCost: document.getElementById("damageCost"),
   rateCost: document.getElementById("rateCost"),
   rangeCost: document.getElementById("rangeCost"),
   splitCost: document.getElementById("splitCost"),
+  hullCost: document.getElementById("hullCost"),
   upgrades: [...document.querySelectorAll(".upgrade")]
 };
 
@@ -43,11 +45,13 @@ const state = {
     damage: { level: 1, cost: 40 },
     rate: { level: 1, cost: 50 },
     range: { level: 1, cost: 45 },
-    split: { level: 1, cost: 90 }
+    split: { level: 1, cost: 90 },
+    hull: { level: 1, cost: 65 }
   },
   tower: {
     angle: 0,
-    gunAngles: [0, Math.PI / 2, Math.PI, Math.PI * 1.5],
+    gunAngles: [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75],
+    gunBases: [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75],
     cooldown: 0,
     damage: 16,
     fireDelay: 0.42,
@@ -152,6 +156,10 @@ function resetGame() {
   state.upgrades.rate = { level: 1, cost: 50 };
   state.upgrades.range = { level: 1, cost: 45 };
   state.upgrades.split = { level: 1, cost: 90 };
+  state.upgrades.hull = { level: 1, cost: 65 };
+  state.maxHealth = 100;
+  state.health = state.maxHealth;
+  state.tower.gunAngles = [...state.tower.gunBases];
   state.tower.damage = 16;
   state.tower.fireDelay = 0.42;
   state.tower.range = 245;
@@ -254,8 +262,9 @@ function fireAt(target) {
   const baseAngle = Math.atan2(target.y - c.y, target.x - c.x);
   const shots = state.tower.split;
   const spread = shots === 1 ? 0 : 0.16;
-  const gunAngles = state.tower.gunAngles.map((angle) => ({
+  const gunAngles = state.tower.gunAngles.map((angle, index) => ({
     angle,
+    index,
     diff: Math.abs(angleDifference(angle, baseAngle))
   })).sort((a, b) => a.diff - b.diff);
 
@@ -264,8 +273,8 @@ function fireAt(target) {
     const angle = baseAngle + offset;
     const muzzleAngle = gunAngles[i % gunAngles.length].angle;
     state.projectiles.push({
-      x: c.x + Math.cos(muzzleAngle) * 43,
-      y: c.y + Math.sin(muzzleAngle) * 43,
+      x: c.x + Math.cos(muzzleAngle) * 51,
+      y: c.y + Math.sin(muzzleAngle) * 51,
       vx: Math.cos(angle) * 720,
       vy: Math.sin(angle) * 720,
       damage: state.tower.damage,
@@ -277,7 +286,7 @@ function fireAt(target) {
 
   state.tower.angle = baseAngle;
   state.tower.cooldown = state.tower.fireDelay;
-  burst(c.x + Math.cos(baseAngle) * 43, c.y + Math.sin(baseAngle) * 43, colors.cyan, 5);
+  burst(c.x + Math.cos(gunAngles[0].angle) * 51, c.y + Math.sin(gunAngles[0].angle) * 51, colors.cyan, 5);
 }
 
 function angleDifference(a, b) {
@@ -468,6 +477,10 @@ function buyUpgrade(kind) {
   if (kind === "rate") state.tower.fireDelay = Math.max(0.13, state.tower.fireDelay * 0.84);
   if (kind === "range") state.tower.range += 38;
   if (kind === "split") state.tower.split = Math.min(5, state.tower.split + 1);
+  if (kind === "hull") {
+    state.maxHealth += 25;
+    state.health = Math.min(state.maxHealth, state.health + 35);
+  }
 
   burst(center().x, center().y, colors.amber, 16);
   updateUi();
@@ -586,8 +599,11 @@ function drawTower() {
 
   for (let i = 0; i < state.tower.gunAngles.length; i += 1) {
     const current = state.tower.gunAngles[i];
-    const targetDiff = angleDifference(state.tower.angle, current);
-    state.tower.gunAngles[i] += targetDiff * 0.09;
+    const base = state.tower.gunBases[i];
+    const targetDiff = angleDifference(state.tower.angle, base);
+    const localAim = Math.max(-Math.PI * 0.23, Math.min(Math.PI * 0.23, targetDiff));
+    const targetAngle = base + localAim;
+    state.tower.gunAngles[i] = current + angleDifference(targetAngle, current) * 0.12;
     drawStationGun(state.tower.gunAngles[i]);
   }
 
@@ -614,17 +630,17 @@ function drawStationGun(angle) {
   ctx.translate(47, 0);
   ctx.fillStyle = "rgba(9, 13, 20, 0.95)";
   ctx.strokeStyle = colors.cyan;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.6;
   ctx.shadowColor = colors.cyan;
-  ctx.shadowBlur = 10;
+  ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.roundRect(-7, -8, 18, 16, 4);
+  ctx.roundRect(-5, -5, 12, 10, 3);
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#dffbff";
-  ctx.fillRect(5, -4, 27, 8);
+  ctx.fillRect(4, -2.5, 18, 5);
   ctx.fillStyle = colors.pink;
-  ctx.fillRect(25, -2, 9, 4);
+  ctx.fillRect(18, -1.5, 6, 3);
   ctx.restore();
 }
 
@@ -636,11 +652,13 @@ function drawEnemies() {
     drawShipHull(enemy);
     ctx.restore();
 
-    const hpPct = enemy.hp / enemy.maxHp;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
-    ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2, 4);
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2 * hpPct, 4);
+    if (enemy.hp < enemy.maxHp) {
+      const hpPct = enemy.hp / enemy.maxHp;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+      ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2, 4);
+      ctx.fillStyle = enemy.color;
+      ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2 * hpPct, 4);
+    }
   }
 }
 
