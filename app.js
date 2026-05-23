@@ -50,8 +50,8 @@ const state = {
   },
   tower: {
     angle: 0,
-    gunAngles: [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75],
-    gunBases: [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75],
+    gunAngles: [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5],
+    gunBases: [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5],
     cooldown: 0,
     damage: 16,
     fireDelay: 0.42,
@@ -260,13 +260,9 @@ function findTarget() {
 function fireAt(target) {
   const c = center();
   const baseAngle = Math.atan2(target.y - c.y, target.x - c.x);
-  const shots = state.tower.split;
+  const shots = activeGunCount();
   const spread = shots === 1 ? 0 : 0.16;
-  const gunAngles = state.tower.gunAngles.map((angle, index) => ({
-    angle,
-    index,
-    diff: Math.abs(angleDifference(angle, baseAngle))
-  })).sort((a, b) => a.diff - b.diff);
+  const gunAngles = state.tower.gunAngles.slice(0, shots).map((angle, index) => ({ angle, index }));
 
   for (let i = 0; i < shots; i += 1) {
     const offset = (i - (shots - 1) / 2) * spread;
@@ -291,6 +287,10 @@ function fireAt(target) {
 
 function angleDifference(a, b) {
   return Math.atan2(Math.sin(a - b), Math.cos(a - b));
+}
+
+function activeGunCount() {
+  return Math.min(state.tower.split, state.tower.gunBases.length);
 }
 
 function burst(x, y, color, count) {
@@ -476,7 +476,7 @@ function buyUpgrade(kind) {
   if (kind === "damage") state.tower.damage += 7;
   if (kind === "rate") state.tower.fireDelay = Math.max(0.13, state.tower.fireDelay * 0.84);
   if (kind === "range") state.tower.range += 38;
-  if (kind === "split") state.tower.split = Math.min(5, state.tower.split + 1);
+  if (kind === "split") state.tower.split = Math.min(state.tower.gunBases.length, state.tower.split + 1);
   if (kind === "hull") {
     state.maxHealth += 25;
     state.health = Math.min(state.maxHealth, state.health + 35);
@@ -500,7 +500,7 @@ function updateUi() {
 
   ui.upgrades.forEach((button) => {
     const kind = button.dataset.upgrade;
-    button.disabled = !state.running || state.credits < state.upgrades[kind].cost || (kind === "split" && state.tower.split >= 5);
+    button.disabled = !state.running || state.credits < state.upgrades[kind].cost || (kind === "split" && state.tower.split >= state.tower.gunBases.length);
   });
 }
 
@@ -597,11 +597,12 @@ function drawTower() {
     ctx.stroke();
   }
 
-  for (let i = 0; i < state.tower.gunAngles.length; i += 1) {
+  for (let i = 0; i < activeGunCount(); i += 1) {
     const current = state.tower.gunAngles[i];
     const base = state.tower.gunBases[i];
     const targetDiff = angleDifference(state.tower.angle, base);
-    const localAim = Math.max(-Math.PI * 0.23, Math.min(Math.PI * 0.23, targetDiff));
+    const localLimit = activeGunCount() === 1 ? Math.PI : Math.PI * 0.23;
+    const localAim = Math.max(-localLimit, Math.min(localLimit, targetDiff));
     const targetAngle = base + localAim;
     state.tower.gunAngles[i] = current + angleDifference(targetAngle, current) * 0.12;
     drawStationGun(state.tower.gunAngles[i]);
