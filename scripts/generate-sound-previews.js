@@ -108,6 +108,19 @@ const sounds = [
     })
   },
   {
+    file: "emergency-pulse.wav",
+    label: "Emergency Pulse",
+    attachesTo: "Full-charge pulse button",
+    samples: render(0.88, (t, i) => {
+      const subHit = sine(58 - t * 22, t) * Math.exp(-t * 4.2);
+      const shockRing = sine(180 + t * 520, t) * Math.exp(-t * 3.4);
+      const shimmer = sine(900 + t * 1400, t) * Math.exp(-t * 5.6);
+      const crackle = noise(i * 2.1) * Math.exp(-t * 11);
+      const gate = t < 0.08 ? 1 : Math.max(0, Math.sin((t - 0.08) * Math.PI * 8));
+      return 0.62 * subHit + 0.28 * shockRing + 0.14 * shimmer * gate + 0.18 * crackle;
+    })
+  },
+  {
     file: "upgrade-purchase.wav",
     label: "Upgrade Purchase",
     attachesTo: "Successful upgrade button tap",

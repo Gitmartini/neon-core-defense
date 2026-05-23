@@ -63,11 +63,12 @@ button {
   grid-column: 1;
   grid-row: 1;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(50px, 1.25fr) repeat(3, minmax(36px, 0.8fr)) minmax(34px, 0.7fr);
+  grid-template-rows: minmax(42px, 0.9fr) minmax(58px, 1.2fr) repeat(3, minmax(34px, 0.72fr)) minmax(32px, 0.62fr);
   align-content: stretch;
 }
 
 .hud > div,
+.pulse-button,
 .pause-button,
 .upgrade,
 .panel {
@@ -89,6 +90,7 @@ button {
   border-radius: 4px;
 }
 
+.pulse-button,
 .pause-button {
   min-width: 0;
   min-height: 0;
@@ -99,6 +101,71 @@ button {
   cursor: pointer;
   font-size: 0.64rem;
   font-weight: 800;
+}
+
+.pulse-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  overflow: hidden;
+  border-color: rgba(255, 95, 199, 0.42);
+  background:
+    linear-gradient(135deg, rgba(255, 95, 199, 0.18), transparent 36%, rgba(111, 247, 255, 0.12)),
+    linear-gradient(180deg, rgba(18, 16, 31, 0.98), rgba(3, 7, 12, 0.96));
+  text-align: center;
+}
+
+.pulse-button span,
+.pulse-button strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.pulse-button span {
+  color: var(--pink);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 8px rgba(255, 95, 199, 0.45);
+}
+
+.pulse-button strong {
+  color: var(--cyan);
+  font-size: 0.78rem;
+  text-shadow: 0 0 10px rgba(111, 247, 255, 0.55);
+}
+
+.pulse-button i {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 7px;
+  height: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(111, 247, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pulse-button b {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--pink), var(--cyan));
+  box-shadow: 0 0 14px rgba(111, 247, 255, 0.6);
+  transition: width 160ms ease;
+}
+
+.pulse-button.ready {
+  border-color: rgba(255, 95, 199, 0.9);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.06),
+    inset 0 0 34px rgba(255, 95, 199, 0.22),
+    0 0 24px rgba(255, 95, 199, 0.34);
 }
 
 .label,
@@ -218,6 +285,7 @@ canvas {
 }
 
 #startButton,
+.pulse-button,
 .pause-button,
 .upgrade {
   cursor: pointer;
@@ -235,6 +303,7 @@ canvas {
 }
 
 #startButton:hover,
+.pulse-button:hover:not(:disabled),
 .pause-button:hover:not(:disabled),
 .upgrade:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -314,6 +383,7 @@ canvas {
 }
 
 .pause-button:disabled,
+.pulse-button:disabled,
 .upgrade:disabled {
   cursor: not-allowed;
   opacity: 0.45;

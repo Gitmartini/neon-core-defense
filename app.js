@@ -3,6 +3,9 @@ const ctx = canvas.getContext("2d");
 
 const ui = {
   healthBar: document.getElementById("healthBar"),
+  pulseButton: document.getElementById("pulseButton"),
+  pulseCharge: document.getElementById("pulseCharge"),
+  pulseFill: document.getElementById("pulseFill"),
   wave: document.getElementById("wave"),
   credits: document.getElementById("credits"),
   score: document.getElementById("score"),
@@ -45,6 +48,12 @@ const state = {
   projectiles: [],
   enemyProjectiles: [],
   particles: [],
+  pulseCharge: 0,
+  pulseMax: 100,
+  pulseRadius: 220,
+  pulseDamage: 85,
+  pulseWave: null,
+  pulseFlash: 0,
   spawnTimer: 0,
   spawnBudget: 0,
   waveBreak: 1.5,
@@ -112,6 +121,7 @@ const soundSources = {
   enemyHit: "assets/sounds/enemy-hit.wav",
   enemyDestroyed: "assets/sounds/enemy-destroyed.wav",
   coreDamaged: "assets/sounds/core-damaged.wav",
+  emergencyPulse: "assets/sounds/emergency-pulse.wav",
   upgradePurchase: "assets/sounds/upgrade-purchase.wav",
   waveStart: "assets/sounds/wave-start.wav",
   pauseToggle: "assets/sounds/pause-toggle.wav",
@@ -235,6 +245,9 @@ function resetGame() {
   state.projectiles = [];
   state.enemyProjectiles = [];
   state.particles = [];
+  state.pulseCharge = 0;
+  state.pulseWave = null;
+  state.pulseFlash = 0;
   state.spawnBudget = 10;
   state.spawnTimer = 0.2;
   state.waveBreak = 1.5;
@@ -335,6 +348,11 @@ function nextWave() {
   state.credits += 18 + state.wave * 3;
   playSound("waveStart", { volume: 0.42, cooldown: 500 });
   burst(center().x, center().y, colors.lime, 22);
+}
+
+function addPulseCharge(amount) {
+  if (!state.running || state.gameOver) return;
+  state.pulseCharge = Math.min(state.pulseMax, state.pulseCharge + amount);
 }
 
 function findTarget() {
@@ -457,6 +475,11 @@ function update(dt) {
 
   state.time += dt;
   state.shake = Math.max(0, state.shake - dt * 22);
+  state.pulseFlash = Math.max(0, state.pulseFlash - dt * 2.8);
+  if (state.pulseWave) {
+    state.pulseWave.life -= dt;
+    if (state.pulseWave.life <= 0) state.pulseWave = null;
+  }
   state.tower.cooldown = Math.max(0, state.tower.cooldown - dt);
   state.health = Math.min(state.maxHealth, state.health + state.repairRate * dt);
 
@@ -533,6 +556,53 @@ function fireEnemyBolt(enemy) {
   burst(enemy.x + Math.cos(angle) * enemy.radius, enemy.y + Math.sin(angle) * enemy.radius, enemy.accent, 5);
 }
 
+function activateEmergencyPulse() {
+  if (!state.running || state.paused || state.gameOver || state.pulseCharge < state.pulseMax) return;
+
+  const c = center();
+  state.pulseCharge = 0;
+  state.pulseWave = {
+    life: 0.55,
+    maxLife: 0.55,
+    radius: state.pulseRadius
+  };
+  state.pulseFlash = 1;
+  state.shake = 18;
+  playSound("emergencyPulse", { volume: 0.78, cooldown: 500 });
+  burst(c.x, c.y, colors.cyan, 42);
+  burst(c.x, c.y, colors.pink, 28);
+
+  for (let i = state.enemyProjectiles.length - 1; i >= 0; i -= 1) {
+    const p = state.enemyProjectiles[i];
+    if (Math.hypot(p.x - c.x, p.y - c.y) <= state.pulseRadius + 40) {
+      burst(p.x, p.y, p.color, 6);
+      state.enemyProjectiles.splice(i, 1);
+    }
+  }
+
+  for (let i = state.enemies.length - 1; i >= 0; i -= 1) {
+    const enemy = state.enemies[i];
+    const dist = Math.hypot(enemy.x - c.x, enemy.y - c.y);
+    if (dist > state.pulseRadius + enemy.radius) continue;
+
+    const falloff = 1 - Math.max(0, dist - 60) / Math.max(1, state.pulseRadius - 60);
+    const damage = state.pulseDamage * (0.58 + Math.max(0, falloff) * 0.42);
+    enemy.hp -= damage;
+    enemy.x += Math.cos(enemy.angle) * -18;
+    enemy.y += Math.sin(enemy.angle) * -18;
+    burst(enemy.x, enemy.y, colors.cyan, 12);
+
+    if (enemy.hp <= 0) {
+      state.score += Math.round(enemy.value * 10 + state.wave * 8);
+      state.credits += enemy.value;
+      burst(enemy.x, enemy.y, enemy.color, 24);
+      state.enemies.splice(i, 1);
+    }
+  }
+
+  updateUi();
+}
+
 function updateProjectiles(dt) {
   for (let i = state.projectiles.length - 1; i >= 0; i -= 1) {
     const p = state.projectiles[i];
@@ -550,6 +620,7 @@ function updateProjectiles(dt) {
         if (enemy.hp <= 0) {
           state.score += Math.round(enemy.value * 10 + state.wave * 8);
           state.credits += enemy.value;
+          addPulseCharge(enemy.value * 0.85);
           playSound("enemyDestroyed", { volume: 0.52, rate: rand(0.92, 1.08), cooldown: 55 });
           burst(enemy.x, enemy.y, enemy.color, 24);
           state.enemies.splice(j, 1);
@@ -650,6 +721,11 @@ function togglePause() {
 function updateUi() {
   const healthPct = Math.max(0, state.health / state.maxHealth) * 100;
   ui.healthBar.style.width = `${healthPct}%`;
+  const pulsePct = Math.max(0, Math.min(100, (state.pulseCharge / state.pulseMax) * 100));
+  ui.pulseCharge.textContent = state.pulseCharge >= state.pulseMax ? "Ready" : `${Math.floor(pulsePct)}%`;
+  ui.pulseFill.style.width = `${pulsePct}%`;
+  ui.pulseButton.disabled = !state.running || state.paused || state.gameOver || state.pulseCharge < state.pulseMax;
+  ui.pulseButton.classList.toggle("ready", state.running && !state.paused && !state.gameOver && state.pulseCharge >= state.pulseMax);
   ui.wave.textContent = state.wave;
   ui.credits.textContent = state.credits;
   ui.score.textContent = state.score;
@@ -677,11 +753,25 @@ function draw() {
 
   drawArena();
   drawRange();
+  drawPulseWave();
   drawEnemies();
   drawProjectiles();
   drawEnemyProjectiles();
   drawTower();
   drawParticles();
+  ctx.restore();
+  drawPulseFlash();
+}
+
+function drawPulseFlash() {
+  if (state.pulseFlash <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = state.pulseFlash * 0.3;
+  ctx.fillStyle = "#dffbff";
+  ctx.fillRect(0, 0, state.width, state.height);
+  ctx.globalAlpha = state.pulseFlash * 0.28;
+  ctx.fillStyle = colors.pink;
+  ctx.fillRect(0, 0, state.width, state.height);
   ctx.restore();
 }
 
@@ -769,6 +859,32 @@ function drawGateTriangle(x, y, rotation) {
   ctx.closePath();
   ctx.fillStyle = "rgba(255, 52, 127, 0.74)";
   ctx.fill();
+  ctx.restore();
+}
+
+function drawPulseWave() {
+  if (!state.pulseWave) return;
+  const c = center();
+  const progress = 1 - state.pulseWave.life / state.pulseWave.maxLife;
+  const radius = state.pulseWave.radius * (0.18 + progress * 0.82);
+  const alpha = Math.max(0, 1 - progress);
+
+  ctx.save();
+  ctx.shadowColor = colors.cyan;
+  ctx.shadowBlur = 30;
+  ctx.strokeStyle = `rgba(111, 247, 255, ${0.9 * alpha})`;
+  ctx.lineWidth = 8 * alpha + 2;
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.shadowColor = colors.pink;
+  ctx.shadowBlur = 24;
+  ctx.strokeStyle = `rgba(255, 95, 199, ${0.55 * alpha})`;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, radius * 0.72, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -1243,6 +1359,7 @@ ui.startButton.addEventListener("click", () => {
 });
 
 ui.pauseButton.addEventListener("click", togglePause);
+ui.pulseButton.addEventListener("click", activateEmergencyPulse);
 
 ui.upgrades.forEach((button) => {
   button.addEventListener("click", () => buyUpgrade(button.dataset.upgrade));
