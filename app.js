@@ -274,16 +274,13 @@ function fireAt(target) {
   const c = center();
   const baseAngle = Math.atan2(target.y - c.y, target.x - c.x);
   const shots = activeGunCount();
-  const spread = shots === 1 ? 0 : 0.16;
-  const gunAngles = state.tower.gunAngles.slice(0, shots).map((angle, index) => ({ angle, index }));
 
   for (let i = 0; i < shots; i += 1) {
-    const offset = (i - (shots - 1) / 2) * spread;
-    const angle = baseAngle + offset;
-    const muzzleAngle = gunAngles[i % gunAngles.length].angle;
+    const muzzle = gunMuzzlePoint(i);
+    const angle = Math.atan2(target.y - muzzle.y, target.x - muzzle.x);
     state.projectiles.push({
-      x: c.x + Math.cos(muzzleAngle) * 51,
-      y: c.y + Math.sin(muzzleAngle) * 51,
+      x: muzzle.x,
+      y: muzzle.y,
       vx: Math.cos(angle) * 720,
       vy: Math.sin(angle) * 720,
       damage: state.tower.damage,
@@ -295,7 +292,8 @@ function fireAt(target) {
 
   state.tower.angle = baseAngle;
   state.tower.cooldown = state.tower.fireDelay;
-  burst(c.x + Math.cos(gunAngles[0].angle) * 51, c.y + Math.sin(gunAngles[0].angle) * 51, colors.cyan, 5);
+  const firstMuzzle = gunMuzzlePoint(0);
+  burst(firstMuzzle.x, firstMuzzle.y, colors.cyan, 5);
 }
 
 function angleDifference(a, b) {
@@ -304,6 +302,16 @@ function angleDifference(a, b) {
 
 function activeGunCount() {
   return Math.min(state.tower.split, state.tower.gunBases.length);
+}
+
+function gunMuzzlePoint(index) {
+  const c = center();
+  const mountAngle = state.tower.gunBases[index];
+  const aimAngle = state.tower.gunAngles[index];
+  return {
+    x: c.x + Math.cos(mountAngle) * 47 + Math.cos(aimAngle) * 24,
+    y: c.y + Math.sin(mountAngle) * 47 + Math.sin(aimAngle) * 24
+  };
 }
 
 function burst(x, y, color, count) {
@@ -626,14 +634,20 @@ function drawTower() {
   for (let i = 0; i < activeGunCount(); i += 1) {
     const current = state.tower.gunAngles[i];
     const base = state.tower.gunBases[i];
-    const targetDiff = angleDifference(state.tower.angle, base);
+    const mountX = c.x + Math.cos(base) * 47;
+    const mountY = c.y + Math.sin(base) * 47;
+    const targetAngle = Math.atan2(
+      c.y + Math.sin(state.tower.angle) * state.tower.range - mountY,
+      c.x + Math.cos(state.tower.angle) * state.tower.range - mountX
+    );
+    const targetDiff = angleDifference(targetAngle, base);
     const localLimit = activeGunCount() === 1 ? Math.PI : Math.PI * 0.23;
     const localAim = Math.max(-localLimit, Math.min(localLimit, targetDiff));
-    const targetAngle = base + localAim;
+    const limitedTargetAngle = base + localAim;
     if (!state.paused) {
-      state.tower.gunAngles[i] = current + angleDifference(targetAngle, current) * 0.12;
+      state.tower.gunAngles[i] = current + angleDifference(limitedTargetAngle, current) * 0.18;
     }
-    drawStationGun(state.tower.gunAngles[i]);
+    drawStationGun(base, state.tower.gunAngles[i]);
   }
 
   ctx.beginPath();
@@ -653,10 +667,11 @@ function drawTower() {
   ctx.shadowBlur = 0;
 }
 
-function drawStationGun(angle) {
+function drawStationGun(mountAngle, aimAngle) {
   ctx.save();
-  ctx.rotate(angle);
+  ctx.rotate(mountAngle);
   ctx.translate(47, 0);
+  ctx.rotate(angleDifference(aimAngle, mountAngle));
   ctx.fillStyle = "rgba(9, 13, 20, 0.95)";
   ctx.strokeStyle = colors.cyan;
   ctx.lineWidth = 1.6;
