@@ -63,7 +63,7 @@ const state = {
     damage: { level: 1, cost: 40 },
     rate: { level: 1, cost: 50 },
     range: { level: 1, cost: 45 },
-    split: { level: 1, cost: 90 },
+    split: { level: 1, cost: 135 },
     hull: { level: 1, cost: 65 },
     repair: { level: 1, cost: 55 },
     patch: { level: "+", cost: 35 }
@@ -102,6 +102,7 @@ const upgradeLabels = {
 };
 
 const bestScoreKey = "neonCoreDefense.bestScore";
+const pulseChargeFactor = 0.72;
 
 const enemySpriteSources = {
   interceptor: "assets/ships/interceptor.png",
@@ -274,7 +275,7 @@ function resetGame() {
   state.upgrades.damage = { level: 1, cost: 40 };
   state.upgrades.rate = { level: 1, cost: 50 };
   state.upgrades.range = { level: 1, cost: 45 };
-  state.upgrades.split = { level: 1, cost: 90 };
+  state.upgrades.split = { level: 1, cost: 135 };
   state.upgrades.hull = { level: 1, cost: 65 };
   state.upgrades.repair = { level: 1, cost: 55 };
   state.upgrades.patch = { level: "+", cost: 35 };
@@ -380,7 +381,7 @@ function recordEnemyDestroyed(enemy, options = {}) {
   state.score += Math.round(enemy.value * 10 + state.wave * 8);
   state.credits += enemy.value;
   if (state.runStats) state.runStats.enemiesDestroyed += 1;
-  if (options.chargePulse !== false) addPulseCharge(enemy.value * 0.85);
+  if (options.chargePulse !== false) addPulseCharge(enemy.value * pulseChargeFactor);
 }
 
 function findTarget() {

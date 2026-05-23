@@ -90,6 +90,10 @@ button {
   border-radius: 4px;
 }
 
+.hud > div .label {
+  text-align: center;
+}
+
 .pulse-button,
 .pause-button {
   min-width: 0;
@@ -184,6 +188,7 @@ button {
   color: #ffffff;
   font-size: 0.92rem;
   line-height: 1.05;
+  text-align: right;
   text-shadow: 0 0 9px rgba(111, 247, 255, 0.42);
 }
 
