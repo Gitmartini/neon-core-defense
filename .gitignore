@@ -5,6 +5,8 @@ screenshot-add-gun.png
 screenshot-repair-pause.png
 screenshot-phone-fit.png
 screenshot-tracking-fix.png
+screenshot-phone-preview.png
+node_modules/
 android/.gradle/
 android/build/
 android/app/build/
