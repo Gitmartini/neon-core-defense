@@ -309,8 +309,8 @@ function gunMuzzlePoint(index) {
   const mountAngle = state.tower.gunBases[index];
   const aimAngle = state.tower.gunAngles[index];
   return {
-    x: c.x + Math.cos(mountAngle) * 47 + Math.cos(aimAngle) * 24,
-    y: c.y + Math.sin(mountAngle) * 47 + Math.sin(aimAngle) * 24
+    x: c.x + Math.cos(mountAngle) * 88 + Math.cos(aimAngle) * 38,
+    y: c.y + Math.sin(mountAngle) * 88 + Math.sin(aimAngle) * 38
   };
 }
 
@@ -562,6 +562,13 @@ function drawArena() {
   ctx.fillStyle = colors.dark;
   ctx.fillRect(0, 0, state.width, state.height);
 
+  const vignette = ctx.createRadialGradient(c.x, c.y, 80, c.x, c.y, Math.max(state.width, state.height) * 0.72);
+  vignette.addColorStop(0, "rgba(5, 22, 32, 0.25)");
+  vignette.addColorStop(0.72, "rgba(4, 7, 13, 0.25)");
+  vignette.addColorStop(1, "rgba(0, 0, 0, 0.72)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, state.width, state.height);
+
   ctx.strokeStyle = "rgba(111, 247, 255, 0.09)";
   ctx.lineWidth = 1;
   for (let x = (state.time * 10) % grid; x < state.width; x += grid) {
@@ -588,6 +595,52 @@ function drawArena() {
   ctx.strokeStyle = "rgba(255, 95, 199, 0.28)";
   ctx.lineWidth = 3;
   ctx.strokeRect(16, 16, state.width - 32, state.height - 32);
+  drawArenaHardware();
+}
+
+function drawArenaHardware() {
+  const w = state.width;
+  const h = state.height;
+  const glow = 0.35 + Math.sin(state.time * 3) * 0.15;
+
+  ctx.save();
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = colors.pink;
+  ctx.strokeStyle = `rgba(255, 52, 127, ${0.55 + glow})`;
+  ctx.lineWidth = 3;
+
+  const gates = [
+    [[w * 0.42, 11], [w * 0.58, 11]],
+    [[w * 0.42, h - 11], [w * 0.58, h - 11]],
+    [[11, h * 0.38], [11, h * 0.62]],
+    [[w - 11, h * 0.38], [w - 11, h * 0.62]]
+  ];
+  for (const gate of gates) {
+    ctx.beginPath();
+    ctx.moveTo(gate[0][0], gate[0][1]);
+    ctx.lineTo(gate[1][0], gate[1][1]);
+    ctx.stroke();
+  }
+
+  drawGateTriangle(w / 2, 18, Math.PI / 2);
+  drawGateTriangle(w / 2, h - 18, -Math.PI / 2);
+  drawGateTriangle(18, h / 2, 0);
+  drawGateTriangle(w - 18, h / 2, Math.PI);
+  ctx.restore();
+}
+
+function drawGateTriangle(x, y, rotation) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.beginPath();
+  ctx.moveTo(0, -11);
+  ctx.lineTo(13, 11);
+  ctx.lineTo(-13, 11);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(255, 52, 127, 0.74)";
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawRange() {
@@ -607,35 +660,68 @@ function drawTower() {
   ctx.translate(c.x, c.y);
 
   const ringPulse = Math.sin(state.time * 2.4) * 0.5 + 0.5;
+  ctx.rotate(state.time * 0.06);
   ctx.shadowColor = colors.cyan;
-  ctx.shadowBlur = 22;
+  ctx.shadowBlur = 34;
   ctx.beginPath();
-  ctx.arc(0, 0, 48, 0, Math.PI * 2);
-  ctx.arc(0, 0, 25, 0, Math.PI * 2, true);
-  ctx.fillStyle = "rgba(111, 247, 255, 0.12)";
+  ctx.arc(0, 0, 92, 0, Math.PI * 2);
+  ctx.arc(0, 0, 40, 0, Math.PI * 2, true);
+  const stationHull = ctx.createRadialGradient(0, 0, 18, 0, 0, 94);
+  stationHull.addColorStop(0, "rgba(111, 247, 255, 0.3)");
+  stationHull.addColorStop(0.42, "rgba(28, 42, 49, 0.98)");
+  stationHull.addColorStop(0.72, "rgba(124, 132, 129, 0.78)");
+  stationHull.addColorStop(1, "rgba(7, 10, 13, 0.98)");
+  ctx.fillStyle = stationHull;
   ctx.fill();
   ctx.strokeStyle = "rgba(216, 251, 255, 0.8)";
   ctx.lineWidth = 3;
   ctx.stroke();
 
   ctx.shadowBlur = 0;
-  for (let i = 0; i < 16; i += 1) {
-    const angle = (Math.PI * 2 * i) / 16 + state.time * 0.08;
-    const inner = 27;
-    const outer = i % 2 ? 44 : 49;
-    ctx.strokeStyle = i % 4 === 0 ? colors.lime : "rgba(111, 247, 255, 0.55)";
-    ctx.lineWidth = i % 4 === 0 ? 3 : 1.5;
+  for (let i = 0; i < 24; i += 1) {
+    const angle = (Math.PI * 2 * i) / 24 + state.time * 0.08;
+    const inner = i % 3 === 0 ? 42 : 52;
+    const outer = i % 2 ? 78 : 92;
+    ctx.strokeStyle = i % 4 === 0 ? colors.amber : "rgba(111, 247, 255, 0.55)";
+    ctx.lineWidth = i % 4 === 0 ? 2.5 : 1.2;
     ctx.beginPath();
     ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
     ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
     ctx.stroke();
   }
 
+  for (let i = 0; i < 12; i += 1) {
+    const angle = (Math.PI * 2 * i) / 12;
+    ctx.save();
+    ctx.rotate(angle);
+    ctx.fillStyle = i % 2 ? "rgba(216, 251, 255, 0.2)" : "rgba(255, 211, 106, 0.25)";
+    ctx.fillRect(58, -5, 22, 10);
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.strokeRect(58, -5, 22, 10);
+    ctx.restore();
+  }
+
+  for (let i = 0; i < 8; i += 1) {
+    const angle = (Math.PI * 2 * i) / 8 + Math.PI / 8;
+    ctx.save();
+    ctx.rotate(angle);
+    ctx.fillStyle = "rgba(6, 11, 16, 0.9)";
+    ctx.strokeStyle = "rgba(111, 247, 255, 0.5)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(70, -8, 18, 16, 3);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.rotate(-state.time * 0.06);
+
   for (let i = 0; i < activeGunCount(); i += 1) {
     const current = state.tower.gunAngles[i];
     const base = state.tower.gunBases[i];
-    const mountX = c.x + Math.cos(base) * 47;
-    const mountY = c.y + Math.sin(base) * 47;
+    const mountX = c.x + Math.cos(base) * 88;
+    const mountY = c.y + Math.sin(base) * 88;
     const targetAngle = Math.atan2(
       c.y + Math.sin(state.tower.angle) * state.tower.range - mountY,
       c.x + Math.cos(state.tower.angle) * state.tower.range - mountX
@@ -651,7 +737,7 @@ function drawTower() {
   }
 
   ctx.beginPath();
-  ctx.arc(0, 0, 18 + ringPulse * 2, 0, Math.PI * 2);
+  ctx.arc(0, 0, 33 + ringPulse * 2, 0, Math.PI * 2);
   ctx.strokeStyle = colors.lime;
   ctx.lineWidth = 2;
   ctx.stroke();
@@ -659,32 +745,37 @@ function drawTower() {
   ctx.restore();
 
   ctx.beginPath();
-  ctx.arc(c.x, c.y, 11 + Math.sin(state.time * 5) * 2, 0, Math.PI * 2);
-  ctx.fillStyle = colors.lime;
-  ctx.shadowColor = colors.lime;
-  ctx.shadowBlur = 18;
+  ctx.arc(c.x, c.y, 29 + Math.sin(state.time * 5) * 2, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(111, 247, 255, 0.28)";
+  ctx.shadowColor = colors.cyan;
+  ctx.shadowBlur = 28;
   ctx.fill();
+  ctx.strokeStyle = colors.cyan;
+  ctx.lineWidth = 3;
+  ctx.stroke();
   ctx.shadowBlur = 0;
 }
 
 function drawStationGun(mountAngle, aimAngle) {
   ctx.save();
   ctx.rotate(mountAngle);
-  ctx.translate(47, 0);
+  ctx.translate(88, 0);
   ctx.rotate(angleDifference(aimAngle, mountAngle));
-  ctx.fillStyle = "rgba(9, 13, 20, 0.95)";
+  ctx.fillStyle = "rgba(9, 13, 20, 0.97)";
   ctx.strokeStyle = colors.cyan;
   ctx.lineWidth = 1.6;
   ctx.shadowColor = colors.cyan;
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = 12;
   ctx.beginPath();
-  ctx.roundRect(-5, -5, 12, 10, 3);
+  ctx.roundRect(-11, -8, 22, 16, 3);
   ctx.fill();
   ctx.stroke();
+  ctx.fillStyle = "rgba(255, 211, 106, 0.65)";
+  ctx.fillRect(-7, -5, 6, 10);
   ctx.fillStyle = "#dffbff";
-  ctx.fillRect(4, -2.5, 18, 5);
+  ctx.fillRect(5, -3.5, 34, 7);
   ctx.fillStyle = colors.pink;
-  ctx.fillRect(18, -1.5, 6, 3);
+  ctx.fillRect(33, -2.5, 11, 5);
   ctx.restore();
 }
 
@@ -707,14 +798,16 @@ function drawEnemies() {
 }
 
 function drawShipHull(enemy) {
+  ctx.scale(1.22, 1.22);
   ctx.shadowColor = enemy.color;
   ctx.shadowBlur = 13;
-  ctx.lineWidth = 2.3;
+  ctx.lineWidth = 1.9;
   ctx.strokeStyle = enemy.color;
   const hull = ctx.createLinearGradient(-enemy.radius * 1.8, -enemy.radius, enemy.radius * 1.8, enemy.radius);
-  hull.addColorStop(0, "rgba(216, 251, 255, 0.05)");
-  hull.addColorStop(0.45, "rgba(216, 251, 255, 0.16)");
-  hull.addColorStop(1, "rgba(9, 13, 20, 0.68)");
+  hull.addColorStop(0, "rgba(8, 12, 18, 0.98)");
+  hull.addColorStop(0.35, "rgba(54, 64, 72, 0.96)");
+  hull.addColorStop(0.68, "rgba(174, 188, 190, 0.42)");
+  hull.addColorStop(1, "rgba(6, 9, 14, 0.98)");
   ctx.fillStyle = hull;
 
   if (enemy.shape === "needle") drawNeedleShip(enemy);
@@ -735,8 +828,14 @@ function drawNeedleShip(enemy) {
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.fillStyle = "rgba(216, 251, 255, 0.18)";
+  ctx.fillRect(-r * 0.35, -r * 0.18, r * 0.95, r * 0.36);
+  drawShipRivets(r, 4, -0.2, 0.42);
   ctx.strokeStyle = enemy.accent;
+  ctx.lineWidth = 1.1;
   ctx.beginPath();
+  ctx.moveTo(r * 1.15, 0);
+  ctx.lineTo(-r * 0.3, 0);
   ctx.moveTo(-r * 0.95, -r * 0.35);
   ctx.lineTo(-r * 1.45, -r * 0.85);
   ctx.moveTo(-r * 0.95, r * 0.35);
@@ -755,7 +854,17 @@ function drawSaucerShip(enemy) {
   ctx.fill();
   ctx.stroke();
   ctx.restore();
+  ctx.strokeStyle = "rgba(216, 251, 255, 0.38)";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, r * 1.05, r * 0.42, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(6, 10, 15, 0.55)";
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.18, 0, r * 0.62, r * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  drawShipRivets(r, 5, -0.72, 0.36);
   ctx.strokeStyle = enemy.accent;
+  ctx.lineWidth = 1.15;
   ctx.beginPath();
   ctx.moveTo(r * 1.4, 0);
   ctx.lineTo(r * 0.45, 0);
@@ -780,7 +889,13 @@ function drawBargeShip(enemy) {
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.fillStyle = "rgba(216, 251, 255, 0.14)";
+  ctx.fillRect(-r * 0.55, -r * 0.34, r * 1.02, r * 0.22);
+  ctx.fillRect(-r * 0.55, r * 0.12, r * 1.02, r * 0.22);
+  ctx.fillStyle = "rgba(255, 211, 106, 0.22)";
+  ctx.fillRect(r * 0.22, -r * 0.52, r * 0.22, r * 1.04);
   ctx.strokeStyle = enemy.accent;
+  ctx.lineWidth = 1.25;
   for (let i = -1; i <= 1; i += 1) {
     ctx.beginPath();
     ctx.moveTo(-r * 0.85, i * r * 0.35);
@@ -805,7 +920,13 @@ function drawFrigateShip(enemy) {
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.fillStyle = "rgba(216, 251, 255, 0.14)";
+  ctx.fillRect(-r * 0.6, -r * 0.15, r * 1.12, r * 0.3);
+  ctx.fillStyle = "rgba(178, 140, 255, 0.18)";
+  ctx.fillRect(-r * 0.96, -r * 0.24, r * 0.48, r * 0.48);
+  drawShipRivets(r, 4, -0.88, 0.4);
   ctx.strokeStyle = enemy.accent;
+  ctx.lineWidth = 1.15;
   ctx.beginPath();
   ctx.moveTo(r * 0.2, 0);
   ctx.lineTo(r * 1.85, 0);
@@ -828,6 +949,19 @@ function drawCockpit(x, y, radius, color) {
   ctx.globalAlpha = 0.78;
   ctx.fill();
   ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawShipRivets(r, count, startX, spread) {
+  ctx.save();
+  ctx.fillStyle = "rgba(216, 251, 255, 0.38)";
+  for (let i = 0; i < count; i += 1) {
+    const x = r * (startX + i * spread);
+    ctx.beginPath();
+    ctx.arc(x, -r * 0.32, Math.max(1, r * 0.08), 0, Math.PI * 2);
+    ctx.arc(x, r * 0.32, Math.max(1, r * 0.08), 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -859,13 +993,20 @@ function drawEngineFlare(x, y, color) {
 
 function drawProjectiles() {
   for (const p of state.projectiles) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(p.x - p.vx * 0.035, p.y - p.vy * 0.035);
+    ctx.lineTo(p.x + p.vx * 0.008, p.y + p.vy * 0.008);
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 2.4;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 18;
+    ctx.stroke();
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
     ctx.fillStyle = p.color;
-    ctx.shadowColor = p.color;
-    ctx.shadowBlur = 16;
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.restore();
   }
 }
 

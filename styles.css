@@ -10,6 +10,8 @@
   --text: #edf8ff;
   --muted: #9eb5c5;
   --danger: #ff596f;
+  --hot: #ff347f;
+  --violet: #d25cff;
 }
 
 * {
@@ -26,9 +28,9 @@ body {
   margin: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at 20% 15%, rgba(111, 247, 255, 0.13), transparent 28rem),
-    radial-gradient(circle at 80% 85%, rgba(255, 95, 199, 0.11), transparent 24rem),
-    linear-gradient(135deg, #070a10, var(--bg) 46%, #101314);
+    linear-gradient(90deg, rgba(255, 52, 127, 0.11), transparent 12%, transparent 88%, rgba(111, 247, 255, 0.12)),
+    radial-gradient(circle at 50% 50%, rgba(111, 247, 255, 0.12), transparent 30rem),
+    linear-gradient(135deg, #03060b, var(--bg) 46%, #07090d);
   color: var(--text);
   font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -47,13 +49,14 @@ button {
   display: grid;
   grid-template-columns: minmax(112px, 0.17fr) minmax(0, 1fr) minmax(180px, 0.27fr);
   grid-template-rows: minmax(0, 1fr);
-  gap: 4px;
+  gap: 6px;
+  background: linear-gradient(90deg, rgba(29, 42, 56, 0.7), transparent 18%, transparent 82%, rgba(29, 42, 56, 0.7));
 }
 
 .hud,
 .controls {
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .hud {
@@ -69,22 +72,28 @@ button {
 .upgrade,
 .panel {
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(16, 27, 41, 0.92), rgba(8, 13, 21, 0.9));
-  box-shadow: 0 0 32px rgba(111, 247, 255, 0.08), inset 0 0 20px rgba(111, 247, 255, 0.04);
+  background:
+    linear-gradient(135deg, rgba(111, 247, 255, 0.14), transparent 18%, transparent 82%, rgba(255, 52, 127, 0.12)),
+    linear-gradient(180deg, rgba(15, 24, 35, 0.97), rgba(3, 7, 12, 0.96));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.035),
+    inset 0 0 28px rgba(111, 247, 255, 0.06),
+    0 0 28px rgba(111, 247, 255, 0.08);
+  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
 }
 
 .hud > div {
   min-width: 0;
   min-height: 0;
   padding: 6px 7px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .pause-button {
   min-width: 0;
   min-height: 0;
   padding: 0 8px;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid var(--line);
   color: var(--text);
   cursor: pointer;
@@ -96,16 +105,19 @@ button {
 .kicker {
   margin: 0 0 3px;
   color: var(--muted);
-  font-size: 0.58rem;
+  font-size: 0.66rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .hud strong {
   display: block;
   min-height: 1rem;
-  font-size: 1rem;
+  color: #ffffff;
+  font-size: 1.15rem;
   line-height: 1.05;
+  text-shadow: 0 0 9px rgba(111, 247, 255, 0.42);
 }
 
 .meter {
@@ -131,11 +143,36 @@ button {
   grid-column: 2;
   grid-row: 1;
   min-height: 0;
-  border: 1px solid rgba(111, 247, 255, 0.35);
-  border-radius: 6px;
+  border: 2px solid rgba(111, 247, 255, 0.28);
+  border-radius: 4px;
   overflow: hidden;
   background: #05080d;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38), 0 0 36px rgba(111, 247, 255, 0.1);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 52, 127, 0.16),
+    inset 0 0 42px rgba(111, 247, 255, 0.08),
+    0 18px 60px rgba(0, 0, 0, 0.38),
+    0 0 36px rgba(111, 247, 255, 0.1);
+}
+
+.game-wrap::before,
+.game-wrap::after {
+  content: "";
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  width: 4px;
+  z-index: 1;
+  background: linear-gradient(transparent, var(--hot), transparent);
+  box-shadow: 0 0 16px var(--hot);
+  pointer-events: none;
+}
+
+.game-wrap::before {
+  left: 7px;
+}
+
+.game-wrap::after {
+  right: 7px;
 }
 
 canvas {
@@ -160,7 +197,7 @@ canvas {
 }
 
 .panel {
-  width: min(340px, 90vw);
+  width: min(340px, 82%);
   padding: 16px;
   border-radius: 8px;
   text-align: center;
@@ -215,7 +252,7 @@ canvas {
   min-height: 0;
   min-width: 0;
   padding: 5px 6px;
-  border-radius: 6px;
+  border-radius: 4px;
   text-align: left;
 }
 
@@ -230,23 +267,50 @@ canvas {
 }
 
 .upgrade span {
-  color: #dffbff;
-  font-size: 0.66rem;
+  color: var(--cyan);
+  font-size: 0.72rem;
   font-weight: 800;
   line-height: 1.05;
 }
 
 .upgrade strong {
-  margin: 1px 0;
+  margin: 2px 0;
   color: var(--lime);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
 .upgrade small {
   color: var(--muted);
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   line-height: 1.05;
+}
+
+.upgrade[data-upgrade="damage"] span,
+.upgrade[data-upgrade="damage"] strong {
+  color: var(--pink);
+}
+
+.upgrade[data-upgrade="rate"] span,
+.upgrade[data-upgrade="rate"] strong,
+.upgrade[data-upgrade="split"] span,
+.upgrade[data-upgrade="split"] strong {
+  color: var(--lime);
+}
+
+.upgrade[data-upgrade="hull"] span,
+.upgrade[data-upgrade="hull"] strong {
+  color: var(--amber);
+}
+
+.upgrade[data-upgrade="repair"] span,
+.upgrade[data-upgrade="repair"] strong {
+  color: var(--violet);
+}
+
+.upgrade[data-upgrade="patch"] span,
+.upgrade[data-upgrade="patch"] strong {
+  color: var(--cyan);
 }
 
 .pause-button:disabled,
