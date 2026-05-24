@@ -1207,7 +1207,7 @@ function drawStationBaseSprite() {
   const image = stationSpriteImages.base;
   if (!image || !image.complete || !image.naturalWidth) return false;
 
-  const width = 214;
+  const width = 240;
   const height = width * (image.naturalHeight / image.naturalWidth);
   ctx.save();
   ctx.shadowColor = colors.cyan;

@@ -227,40 +227,74 @@ function oculusHorror() {
 }
 
 function seal() {
-  const png = makePng(520, 520);
-  const c = 260;
-  glow(png, c, c, 190, rgba("b6ff78", 52));
-  glow(png, c, c, 115, rgba("8dffd5", 62));
-  for (let i = 0; i < 44; i += 1) {
+  const png = makePng(620, 620);
+  const c = 310;
+  glow(png, c, c, 240, rgba("b6ff78", 44));
+  glow(png, c, c, 132, rgba("8dffd5", 48));
+
+  for (let i = 0; i < 72; i += 1) {
     const a = noise(i, 1) * Math.PI * 2;
-    const r = 92 + noise(i, 3) * 118;
-    ellipse(png, c + Math.cos(a) * r, c + Math.sin(a) * r, 8 + noise(i, 4) * 16, 5 + noise(i, 5) * 14, rgba("2a2118", 105), a);
+    const r = 100 + noise(i, 3) * 165;
+    ellipse(png, c + Math.cos(a) * r, c + Math.sin(a) * r, 10 + noise(i, 4) * 18, 6 + noise(i, 5) * 16, rgba("1d1712", 130), a);
   }
-  for (let r = 70; r <= 172; r += 28) {
-    for (let a = 0; a < Math.PI * 2; a += 0.015) {
-      const wobble = Math.sin(a * 7 + r) * 3;
-      blend(png, c + Math.cos(a) * (r + wobble), c + Math.sin(a) * (r + wobble), rgba("6a5641", 205));
-      if (a % 0.09 < 0.02) blend(png, c + Math.cos(a) * (r + 5), c + Math.sin(a) * (r + 5), rgba("b6ff78", 125));
+
+  for (let i = 0; i < 24; i += 1) {
+    const a = (i / 24) * Math.PI * 2 + noise(i, 2) * 0.04;
+    const inner = 126 + noise(i, 8) * 12;
+    const outer = 218 + noise(i, 9) * 34;
+    const width = 7 + noise(i, 4) * 6;
+    line(png, c + Math.cos(a) * inner, c + Math.sin(a) * inner, c + Math.cos(a) * outer, c + Math.sin(a) * outer, rgba("21170f", 235), width);
+    line(png, c + Math.cos(a + 0.012) * (inner + 10), c + Math.sin(a + 0.012) * (inner + 10), c + Math.cos(a + 0.012) * (outer - 8), c + Math.sin(a + 0.012) * (outer - 8), rgba("5f4b34", 145), 2.1);
+  }
+
+  for (let i = 0; i < 32; i += 1) {
+    const a = (i / 32) * Math.PI * 2;
+    const r = i % 2 ? 208 : 228;
+    const w = i % 4 === 0 ? 24 : 18;
+    polygon(png, [
+      [c + Math.cos(a - 0.035) * 174, c + Math.sin(a - 0.035) * 174],
+      [c + Math.cos(a + 0.035) * 174, c + Math.sin(a + 0.035) * 174],
+      [c + Math.cos(a) * (r + w), c + Math.sin(a) * (r + w)]
+    ], rgba("34291d", 225));
+    line(png, c + Math.cos(a) * 184, c + Math.sin(a) * 184, c + Math.cos(a) * r, c + Math.sin(a) * r, rgba("80704f", 95), 1.4);
+  }
+
+  for (let r = 86; r <= 204; r += 28) {
+    for (let a = 0; a < Math.PI * 2; a += 0.012) {
+      const wobble = Math.sin(a * 7 + r) * 4 + Math.sin(a * 17) * 1.6;
+      const alpha = r % 56 === 0 ? 230 : 190;
+      blend(png, c + Math.cos(a) * (r + wobble), c + Math.sin(a) * (r + wobble), rgba("7b6748", alpha));
+      if (a % 0.105 < 0.018) blend(png, c + Math.cos(a) * (r + 7), c + Math.sin(a) * (r + 7), rgba("b6ff78", 145));
     }
   }
-  for (let i = 0; i < 18; i += 1) {
-    const a = (i / 18) * Math.PI * 2;
-    line(png, c + Math.cos(a) * 82, c + Math.sin(a) * 82, c + Math.cos(a) * 176, c + Math.sin(a) * 176, rgba("3d3329", 210), 4);
+
+  for (let i = 0; i < 36; i += 1) {
+    const a = (i / 36) * Math.PI * 2;
+    const r = 154 + (i % 3) * 18;
+    const x = c + Math.cos(a) * r;
+    const y = c + Math.sin(a) * r;
+    line(png, x - Math.sin(a) * 7, y + Math.cos(a) * 7, x + Math.sin(a) * 7, y - Math.cos(a) * 7, rgba("b6ff78", 118), 1.6);
+    line(png, x - Math.cos(a) * 5, y - Math.sin(a) * 5, x + Math.cos(a) * 5, y + Math.sin(a) * 5, rgba("8dffd5", 70), 1.1);
   }
-  for (let i = 0; i < 26; i += 1) {
+
+  for (let i = 0; i < 34; i += 1) {
     const a = noise(i, 8) * Math.PI * 2;
-    const r1 = 62 + noise(i, 9) * 140;
-    const r2 = r1 + 26 + noise(i, 10) * 54;
-    line(png, c + Math.cos(a) * r1, c + Math.sin(a) * r1, c + Math.cos(a + noise(i, 11) * 0.4 - 0.2) * r2, c + Math.sin(a + noise(i, 12) * 0.4 - 0.2) * r2, rgba("15120e", 145), 2);
+    const r1 = 70 + noise(i, 9) * 170;
+    const r2 = r1 + 30 + noise(i, 10) * 70;
+    line(png, c + Math.cos(a) * r1, c + Math.sin(a) * r1, c + Math.cos(a + noise(i, 11) * 0.42 - 0.21) * r2, c + Math.sin(a + noise(i, 12) * 0.42 - 0.21) * r2, rgba("100d0a", 170), 2.6);
   }
-  for (let a = 0; a < Math.PI * 5.4; a += 0.016) {
-    const r = 10 + a * 8.2;
-    blend(png, c + Math.cos(a) * r, c + Math.sin(a) * r, rgba("8dffd5", 230));
-    blend(png, c + Math.cos(a) * (r + 2), c + Math.sin(a) * (r + 2), rgba("b6ff78", 140));
+
+  for (let a = 0; a < Math.PI * 6.6; a += 0.012) {
+    const r = 12 + a * 8.8;
+    const wobble = Math.sin(a * 5) * 3;
+    blend(png, c + Math.cos(a) * (r + wobble), c + Math.sin(a) * (r + wobble), rgba("8dffd5", 220));
+    blend(png, c + Math.cos(a) * (r + wobble + 3), c + Math.sin(a) * (r + wobble + 3), rgba("b6ff78", 132));
   }
-  ellipse(png, c, c, 42, 42, rgba("14190f", 210));
-  glow(png, c, c, 58, rgba("b6ff78", 110));
-  speckle(png, rgba("a1bf80", 62), 0.89, 61);
+
+  ellipse(png, c, c, 64, 64, rgba("0c0f08", 240));
+  glow(png, c, c, 86, rgba("b6ff78", 124));
+  ellipse(png, c, c, 36, 36, rgba("b6ff78", 80));
+  speckle(png, rgba("a1bf80", 70), 0.87, 61);
   return png;
 }
 
