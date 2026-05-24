@@ -13,6 +13,11 @@ const ui = {
   overlayMessage: document.getElementById("overlayMessage"),
   runReport: document.getElementById("runReport"),
   startButton: document.getElementById("startButton"),
+  briefingOverlay: document.getElementById("briefingOverlay"),
+  briefingCloseButton: document.getElementById("briefingCloseButton"),
+  briefingBeginButton: document.getElementById("briefingBeginButton"),
+  briefingDontShow: document.getElementById("briefingDontShow"),
+  briefingHelpButton: document.getElementById("briefingHelpButton"),
   pauseButton: document.getElementById("pauseButton"),
   damageLevel: document.getElementById("damageLevel"),
   rateLevel: document.getElementById("rateLevel"),
@@ -107,7 +112,9 @@ const upgradeLabels = {
 };
 
 const bestScoreKey = "neonCoreDefense.bestScore";
+const briefingHiddenKey = "neonCoreDefense.hideBriefing";
 const pulseChargeFactor = 0.45;
+let briefingAutoPaused = false;
 
 const enemySpriteSources = {
   interceptor: "assets/ships/interceptor.png",
@@ -303,6 +310,29 @@ function resetGame() {
   ui.runReport.classList.add("hidden");
   playSound("waveStart", { volume: 0.42, cooldown: 500 });
   updateUi();
+}
+
+function showBriefing({ manual = false } = {}) {
+  if (manual && state.running && !state.paused && !state.gameOver) {
+    state.paused = true;
+    briefingAutoPaused = true;
+    updateUi();
+  }
+
+  ui.briefingDontShow.checked = localStorage.getItem(briefingHiddenKey) === "true";
+  ui.briefingOverlay.classList.remove("hidden");
+}
+
+function hideBriefing() {
+  localStorage.setItem(briefingHiddenKey, ui.briefingDontShow.checked ? "true" : "false");
+  ui.briefingOverlay.classList.add("hidden");
+
+  if (briefingAutoPaused && state.running && !state.gameOver) {
+    state.paused = false;
+    state.last = performance.now();
+    briefingAutoPaused = false;
+    updateUi();
+  }
 }
 
 function center() {
@@ -1452,6 +1482,9 @@ ui.startButton.addEventListener("click", () => {
   resetGame();
 });
 
+ui.briefingCloseButton.addEventListener("click", hideBriefing);
+ui.briefingBeginButton.addEventListener("click", hideBriefing);
+ui.briefingHelpButton.addEventListener("click", () => showBriefing({ manual: true }));
 ui.pauseButton.addEventListener("click", togglePause);
 ui.pulseButton.addEventListener("click", activateEmergencyPulse);
 
@@ -1462,4 +1495,7 @@ ui.upgrades.forEach((button) => {
 window.addEventListener("resize", resize);
 resize();
 updateUi();
+if (localStorage.getItem(briefingHiddenKey) !== "true") {
+  showBriefing();
+}
 requestAnimationFrame(loop);

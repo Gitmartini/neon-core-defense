@@ -10,7 +10,9 @@ const contentTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
-  ".png": "image/png"
+  ".png": "image/png",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav"
 };
 
 function serveFile(req, res) {
@@ -52,6 +54,10 @@ async function main() {
 
   try {
     await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "load" });
+    const beginButton = page.getByRole("button", { name: "Begin" });
+    if (await beginButton.isVisible()) {
+      await beginButton.click();
+    }
     await page.getByRole("button", { name: "Start Defense" }).click();
     await page.waitForTimeout(4500);
     await page.screenshot({ path: outputPath });
