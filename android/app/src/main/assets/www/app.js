@@ -448,6 +448,14 @@ function calculateProjectileDamage(enemy, rawDamage) {
   return Math.max(damageFloor, rawDamage - effectiveArmor);
 }
 
+function coreHealthColor(alpha = 1) {
+  const pct = Math.max(0, Math.min(1, state.health / state.maxHealth));
+  const red = pct < 0.5 ? 255 : Math.round(255 - (pct - 0.5) * 2 * 87);
+  const green = pct < 0.5 ? Math.round(89 + pct * 2 * 166) : 255;
+  const blue = pct < 0.5 ? Math.round(111 - pct * 2 * 43) : Math.round(111 - (pct - 0.5) * 2 * 62);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 function findTarget(options = {}) {
   const c = center();
   const excluded = options.excluded || new Set();
@@ -955,7 +963,7 @@ function updateUi() {
     ui[`${kind}Cost`].textContent = `Cost ${state.upgrades[kind].cost}`;
   }
   ui.targetAiLevel.textContent = state.upgrades.targetAi.level > 0 ? state.tower.targetMode[0].toUpperCase() + state.tower.targetMode.slice(1) : "Buy";
-  ui.targetAiCost.textContent = state.upgrades.targetAi.level > 0 ? "Focus / Split" : `Cost ${state.upgrades.targetAi.cost}`;
+  ui.targetAiCost.textContent = state.upgrades.targetAi.level > 0 ? "" : `Cost ${state.upgrades.targetAi.cost}`;
 
   ui.upgrades.forEach((button) => {
     const kind = button.dataset.upgrade;
@@ -1166,11 +1174,11 @@ function drawTower() {
 
   ctx.beginPath();
   ctx.arc(c.x, c.y, 29 + Math.sin(state.time * 5) * 2, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(111, 247, 255, 0.2)";
-  ctx.shadowColor = colors.cyan;
+  ctx.fillStyle = coreHealthColor(0.24);
+  ctx.shadowColor = coreHealthColor(0.95);
   ctx.shadowBlur = 24;
   ctx.fill();
-  ctx.strokeStyle = colors.cyan;
+  ctx.strokeStyle = coreHealthColor(0.95);
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.shadowBlur = 0;
