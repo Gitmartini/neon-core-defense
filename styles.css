@@ -1,17 +1,17 @@
 :root {
   color-scheme: dark;
-  --bg: #090d14;
-  --panel: rgba(11, 18, 28, 0.88);
-  --line: rgba(121, 241, 255, 0.26);
-  --cyan: #6ff7ff;
-  --lime: #a8ff6f;
-  --pink: #ff5fc7;
-  --amber: #ffd36a;
+  --bg: #080907;
+  --panel: rgba(13, 16, 11, 0.9);
+  --line: rgba(141, 255, 213, 0.22);
+  --cyan: #8dffd5;
+  --lime: #b6ff78;
+  --pink: #c47cff;
+  --amber: #d6b56d;
   --text: #edf8ff;
-  --muted: #9eb5c5;
-  --danger: #ff596f;
-  --hot: #ff347f;
-  --violet: #d25cff;
+  --muted: #9cad92;
+  --danger: #db4d4d;
+  --hot: #a95cff;
+  --violet: #8e62ff;
 }
 
 * {
@@ -31,9 +31,10 @@ body {
   margin: 0;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(255, 52, 127, 0.11), transparent 12%, transparent 88%, rgba(111, 247, 255, 0.12)),
-    radial-gradient(circle at 50% 50%, rgba(111, 247, 255, 0.12), transparent 30rem),
-    linear-gradient(135deg, #03060b, var(--bg) 46%, #07090d);
+    radial-gradient(circle at 18% 20%, rgba(112, 150, 71, 0.14), transparent 12rem),
+    linear-gradient(90deg, rgba(73, 46, 28, 0.24), transparent 13%, transparent 86%, rgba(45, 64, 38, 0.24)),
+    radial-gradient(circle at 50% 50%, rgba(141, 255, 213, 0.09), transparent 30rem),
+    linear-gradient(135deg, #030402, var(--bg) 46%, #0d0908);
   color: var(--text);
   font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -53,7 +54,9 @@ button {
   grid-template-columns: minmax(90px, 0.14fr) minmax(0, 1fr) minmax(144px, 0.22fr);
   grid-template-rows: minmax(0, 1fr);
   gap: 5px;
-  background: linear-gradient(90deg, rgba(29, 42, 56, 0.7), transparent 18%, transparent 82%, rgba(29, 42, 56, 0.7));
+  background:
+    linear-gradient(90deg, rgba(42, 50, 33, 0.72), transparent 18%, transparent 82%, rgba(47, 39, 31, 0.72)),
+    repeating-linear-gradient(0deg, rgba(183, 255, 130, 0.025) 0 1px, transparent 1px 13px);
 }
 
 .hud,
@@ -81,12 +84,13 @@ button {
 .briefing-panel {
   border: 1px solid var(--line);
   background:
-    linear-gradient(135deg, rgba(111, 247, 255, 0.14), transparent 18%, transparent 82%, rgba(255, 52, 127, 0.12)),
-    linear-gradient(180deg, rgba(15, 24, 35, 0.97), rgba(3, 7, 12, 0.96));
+    radial-gradient(circle at 12% 18%, rgba(182, 255, 120, 0.13), transparent 1.1rem),
+    linear-gradient(135deg, rgba(141, 255, 213, 0.1), transparent 18%, transparent 82%, rgba(125, 86, 47, 0.18)),
+    linear-gradient(180deg, rgba(18, 24, 15, 0.97), rgba(5, 7, 4, 0.96));
   box-shadow:
     inset 0 0 0 2px rgba(255, 255, 255, 0.035),
-    inset 0 0 28px rgba(111, 247, 255, 0.06),
-    0 0 28px rgba(111, 247, 255, 0.08);
+    inset 0 0 28px rgba(141, 255, 213, 0.05),
+    0 0 28px rgba(43, 23, 16, 0.28);
   clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
 }
 

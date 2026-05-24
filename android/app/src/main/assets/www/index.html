@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Neon Core Defense</title>
+    <title>Slither</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -14,24 +14,24 @@
           <button class="help-button" id="briefingHelpButton" type="button" aria-label="Open mission briefing">?</button>
         </div>
         <div class="stat-card stat-card--core">
-          <p class="label">Core</p>
+          <p class="label">Seal</p>
           <span class="ui-icon" aria-hidden="true">
             <svg viewBox="0 0 64 64">
               <path d="M32 6 52 14v15c0 14-8 24-20 29C20 53 12 43 12 29V14Z"></path>
               <path d="M23 28c0-4 5-7 9-2 4-5 9-2 9 2 0 7-9 13-9 13s-9-6-9-13Z"></path>
             </svg>
           </span>
-          <div class="meter" aria-label="Core integrity">
+          <div class="meter" aria-label="Seal integrity">
             <span id="healthBar"></span>
           </div>
         </div>
         <button class="pulse-button" id="pulseButton" type="button" disabled>
-          <span>Pulse</span>
+          <span>Ward Burst</span>
           <strong id="pulseCharge">0%</strong>
           <i aria-hidden="true"><b id="pulseFill"></b></i>
         </button>
         <div class="stat-card">
-          <p class="label">Wave</p>
+          <p class="label">Incursion</p>
           <span class="ui-icon" aria-hidden="true">
             <svg viewBox="0 0 64 64">
               <path d="M8 32h8m32 0h8M32 8v8m0 32v8"></path>
@@ -42,7 +42,7 @@
           <strong id="wave">1</strong>
         </div>
         <div class="stat-card">
-          <p class="label">Credits</p>
+          <p class="label">Essence</p>
           <span class="ui-icon" aria-hidden="true">
             <svg viewBox="0 0 64 64">
               <path d="M32 6 54 19v26L32 58 10 45V19Z"></path>
@@ -63,13 +63,13 @@
         <button class="pause-button" id="pauseButton" type="button" disabled>Pause</button>
       </section>
 
-      <section class="game-wrap" aria-label="Neon Core Defense playfield">
+      <section class="game-wrap" aria-label="Slither playfield">
         <canvas id="game" width="960" height="640"></canvas>
         <div class="overlay" id="overlay">
           <div class="panel">
-            <p class="kicker">Single Tower Defense</p>
-            <h1>Neon Core Defense</h1>
-            <p id="overlayMessage">Hold the center reactor against edge-born drones. Your turret aims and fires automatically.</p>
+            <p class="kicker">Ancient Seal Defense</p>
+            <h1>Slither</h1>
+            <p id="overlayMessage">Hold the Ancient Seal against the things below. Your wards aim and strike automatically.</p>
             <div class="run-report hidden" id="runReport" aria-label="Run summary"></div>
             <button id="startButton" type="button">Start Defense</button>
           </div>
@@ -78,29 +78,30 @@
           <div class="briefing-panel">
             <button class="briefing-close" id="briefingCloseButton" type="button" aria-label="Close mission briefing">×</button>
             <p class="kicker">Mission Briefing</p>
-            <h2 id="briefingTitle">Neon Core Defense</h2>
+            <h2 id="briefingTitle">Slither</h2>
             <div class="briefing-grid">
               <section>
                 <h3>Rules</h3>
                 <ul>
-                  <li>Defend the core in the center.</li>
-                  <li>Enemies enter from the edges.</li>
-                  <li>Guns auto-aim and auto-fire.</li>
-                  <li>Survive waves, earn credits, charge Emergency Pulse.</li>
+                  <li>The Ancient Seal keeps the things below from entering our world. If it breaks, humanity shudders.</li>
+                  <li>Defend the seal in the center.</li>
+                  <li>Horrors slither in from the edges.</li>
+                  <li>Wards auto-aim and strike.</li>
+                  <li>Survive incursions, gather essence, charge Ward Burst.</li>
                 </ul>
               </section>
               <section>
                 <h3>Upgrades</h3>
                 <dl>
-                  <div><dt>Damage</dt><dd>Harder hits.</dd></div>
-                  <div><dt>Fire Rate</dt><dd>Faster shots per gun.</dd></div>
-                  <div><dt>Range</dt><dd>Bigger attack zone and pulse.</dd></div>
-                  <div><dt>Add Gun</dt><dd>More turrets.</dd></div>
-                  <div><dt>Piercing</dt><dd>Beats armor.</dd></div>
-                  <div><dt>Core HP</dt><dd>Stronger core.</dd></div>
-                  <div><dt>Repair Rate</dt><dd>Passive healing.</dd></div>
-                  <div><dt>Patch Core</dt><dd>Instant repair.</dd></div>
-                  <div><dt>Target AI</dt><dd>Focus or split fire.</dd></div>
+                  <div><dt>Hex Power</dt><dd>Harder strikes.</dd></div>
+                  <div><dt>Cast Rate</dt><dd>Faster wards.</dd></div>
+                  <div><dt>Aura</dt><dd>Bigger attack zone and burst.</dd></div>
+                  <div><dt>Add Ward</dt><dd>More miasma wards.</dd></div>
+                  <div><dt>Bane</dt><dd>Beats armor.</dd></div>
+                  <div><dt>Seal Strength</dt><dd>Stronger seal.</dd></div>
+                  <div><dt>Regrowth</dt><dd>Passive mending.</dd></div>
+                  <div><dt>Mend Seal</dt><dd>Instant repair.</dd></div>
+                  <div><dt>Ward Mind</dt><dd>Focus or split fire.</dd></div>
                 </dl>
               </section>
             </div>
@@ -123,7 +124,7 @@
               <circle cx="32" cy="32" r="5"></circle>
             </svg>
           </span>
-          <span>Damage</span>
+          <span>Hex Power</span>
           <strong id="damageLevel">1</strong>
           <small id="damageCost">Cost 50</small>
         </button>
@@ -134,7 +135,7 @@
               <path d="M35 47 56 26 42 18 31 42Z"></path>
             </svg>
           </span>
-          <span>Fire Rate</span>
+          <span>Cast Rate</span>
           <strong id="rateLevel">1</strong>
           <small id="rateCost">Cost 65</small>
         </button>
@@ -146,7 +147,7 @@
               <path d="M32 5v14m0 26v14M5 32h14m26 0h14"></path>
             </svg>
           </span>
-          <span>Range</span>
+          <span>Aura</span>
           <strong id="rangeLevel">1</strong>
           <small id="rangeCost">Cost 60</small>
         </button>
@@ -157,7 +158,7 @@
               <path d="M11 50h18M39 14h14"></path>
             </svg>
           </span>
-          <span>Piercing</span>
+          <span>Bane</span>
           <strong id="piercingLevel">1</strong>
           <small id="piercingCost">Cost 95</small>
         </button>
@@ -169,7 +170,7 @@
               <path d="m26 40 15-15 5 5-15 15-8 2Z"></path>
             </svg>
           </span>
-          <span>Repair Rate</span>
+          <span>Regrow</span>
           <strong id="repairLevel">1</strong>
           <small id="repairCost">Cost 75</small>
         </button>
@@ -180,7 +181,7 @@
               <path d="M32 22v20M22 32h20"></path>
             </svg>
           </span>
-          <span>Core HP</span>
+          <span>Seal Strength</span>
           <strong id="hullLevel">1</strong>
           <small id="hullCost">Cost 85</small>
         </button>
@@ -192,7 +193,7 @@
               <path d="M49 12v16m-8-8h16"></path>
             </svg>
           </span>
-          <span>Add Gun</span>
+          <span>Add Ward</span>
           <strong id="splitLevel">1</strong>
           <small id="splitCost">Cost 420</small>
         </button>
@@ -203,7 +204,7 @@
               <path d="M32 24v16M24 32h16M22 8v10m10-10v10m10-10v10M22 46v10m10-10v10m10-10v10M8 22h10M8 32h10M8 42h10M46 22h10M46 32h10M46 42h10"></path>
             </svg>
           </span>
-          <span>Patch Core</span>
+          <span>Mend Seal</span>
           <strong id="patchLevel">+</strong>
           <small id="patchCost">Cost 45</small>
         </button>
@@ -217,7 +218,7 @@
               <path d="M24 32h20M23 29 45 17M23 35l22 12"></path>
             </svg>
           </span>
-          <span>Target AI</span>
+          <span>Ward Mind</span>
           <strong id="targetAiLevel">Buy</strong>
           <small id="targetAiCost">Cost 240</small>
           <span class="target-toggle" aria-hidden="true">

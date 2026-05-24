@@ -100,31 +100,31 @@ const state = {
 };
 
 const colors = {
-  cyan: "#6ff7ff",
-  lime: "#a8ff6f",
-  pink: "#ff5fc7",
-  amber: "#ffd36a",
-  violet: "#b28cff",
-  orange: "#ff9f43",
-  red: "#ff596f",
-  dark: "#05080d"
+  cyan: "#8dffd5",
+  lime: "#b6ff78",
+  pink: "#c47cff",
+  amber: "#d6b56d",
+  violet: "#8e62ff",
+  orange: "#b98245",
+  red: "#db4d4d",
+  dark: "#060805"
 };
 
 const upgradeLabels = {
-  damage: "Damage",
-  rate: "Fire Rate",
-  range: "Range",
-  split: "Add Gun",
-  piercing: "Piercing",
-  hull: "Core HP",
-  repair: "Repair Rate",
-  patch: "Patch Core",
-  targetAi: "Target AI"
+  damage: "Hex Power",
+  rate: "Cast Rate",
+  range: "Aura",
+  split: "Add Ward",
+  piercing: "Bane",
+  hull: "Seal Strength",
+  repair: "Regrow",
+  patch: "Mend Seal",
+  targetAi: "Ward Mind"
 };
 
-const bestScoreKey = "neonCoreDefense.bestScore";
-const briefingHiddenKey = "neonCoreDefense.hideBriefing";
-const soundMutedKey = "neonCoreDefense.soundMuted";
+const bestScoreKey = "slither.bestScore";
+const briefingHiddenKey = "slither.hideBriefing";
+const soundMutedKey = "slither.soundMuted";
 const pulseChargeFactor = 0.45;
 let briefingAutoPaused = false;
 let soundMuted = localStorage.getItem(soundMutedKey) === "true";
@@ -194,8 +194,8 @@ const enemyTypes = {
     speedScale: 6,
     value: 12,
     damage: 6,
-    color: colors.pink,
-    accent: colors.cyan,
+    color: "#d5f0c2",
+    accent: "#9dff66",
     shape: "needle",
     sprite: "interceptor",
     spriteWidth: 48
@@ -209,8 +209,8 @@ const enemyTypes = {
     speedScale: 4,
     value: 16,
     damage: 9,
-    color: colors.cyan,
-    accent: colors.lime,
+    color: "#84f0ad",
+    accent: "#dbff77",
     shape: "saucer",
     sprite: "raider",
     spriteWidth: 64
@@ -224,8 +224,8 @@ const enemyTypes = {
     speedScale: 2.5,
     value: 29,
     damage: 16,
-    color: colors.amber,
-    accent: colors.orange,
+    color: "#a7774d",
+    accent: "#e0bc6d",
     shape: "barge",
     sprite: "dreadnought",
     spriteWidth: 96
@@ -239,8 +239,8 @@ const enemyTypes = {
     speedScale: 3.2,
     value: 24,
     damage: 0,
-    color: colors.violet,
-    accent: colors.pink,
+    color: "#28252d",
+    accent: "#c47cff",
     shape: "frigate",
     sprite: "artillery",
     spriteWidth: 88,
@@ -257,8 +257,8 @@ const enemyTypes = {
     speedScale: 5,
     value: 18,
     damage: 8,
-    color: colors.red,
-    accent: colors.orange,
+    color: "#d37b73",
+    accent: "#f1d181",
     shape: "needle",
     sprite: "droneLeader",
     spriteWidth: 58
@@ -548,7 +548,8 @@ function fireAt(target) {
       damage: state.tower.damage,
       life: 0.75,
       radius: 4.5,
-      color: i % 2 ? colors.pink : colors.lime
+      color: [colors.lime, colors.pink, colors.cyan, colors.amber][i % 4],
+      seed: rand(0, Math.PI * 2)
     });
   }
 
@@ -881,14 +882,14 @@ function showRunReport() {
 
   const favorite = favoriteUpgrade();
   ui.overlay.classList.remove("hidden");
-  ui.overlay.querySelector(".kicker").textContent = "Core Offline";
-  ui.overlay.querySelector("h1").textContent = isNewBest ? "New Best!" : "Run Complete";
+  ui.overlay.querySelector(".kicker").textContent = "Seal Broken";
+  ui.overlay.querySelector("h1").textContent = isNewBest ? "New Dread!" : "Incursion Complete";
   ui.overlayMessage.textContent = isNewBest ? `Score ${formatNumber(state.score)} beat your previous best.` : `Score ${formatNumber(state.score)}. Best: ${formatNumber(bestScore)}.`;
   ui.runReport.innerHTML = `
-    <div><span>Wave Reached</span><strong>${state.wave}</strong></div>
+    <div><span>Incursion Reached</span><strong>${state.wave}</strong></div>
     <div><span>Enemies Destroyed</span><strong>${formatNumber(state.runStats?.enemiesDestroyed || 0)}</strong></div>
     <div><span>Favorite Upgrade</span><strong>${favorite}</strong></div>
-    <div><span>Emergency Pulses</span><strong>${state.runStats?.pulsesFired || 0}</strong></div>
+    <div><span>Ward Bursts</span><strong>${state.runStats?.pulsesFired || 0}</strong></div>
   `;
   ui.runReport.classList.remove("hidden");
   ui.startButton.textContent = "Retry";
@@ -1039,7 +1040,7 @@ function drawArena() {
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, state.width, state.height);
 
-  ctx.strokeStyle = "rgba(111, 247, 255, 0.09)";
+  ctx.strokeStyle = "rgba(141, 255, 213, 0.06)";
   ctx.lineWidth = 1;
   for (let x = (state.time * 10) % grid; x < state.width; x += grid) {
     ctx.beginPath();
@@ -1056,13 +1057,13 @@ function drawArena() {
 
   const pulse = 0.5 + Math.sin(state.time * 3) * 0.5;
   const glow = ctx.createRadialGradient(c.x, c.y, 20, c.x, c.y, Math.min(state.width, state.height) * 0.52);
-  glow.addColorStop(0, `rgba(111, 247, 255, ${0.18 + pulse * 0.08})`);
-  glow.addColorStop(0.5, "rgba(111, 247, 255, 0.035)");
-  glow.addColorStop(1, "rgba(111, 247, 255, 0)");
+  glow.addColorStop(0, `rgba(104, 151, 79, ${0.15 + pulse * 0.08})`);
+  glow.addColorStop(0.5, "rgba(141, 255, 213, 0.025)");
+  glow.addColorStop(1, "rgba(141, 255, 213, 0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, state.width, state.height);
 
-  ctx.strokeStyle = "rgba(255, 95, 199, 0.28)";
+  ctx.strokeStyle = "rgba(119, 78, 54, 0.28)";
   ctx.lineWidth = 3;
   ctx.strokeRect(16, 16, state.width - 32, state.height - 32);
   drawArenaHardware();
@@ -1076,7 +1077,7 @@ function drawArenaHardware() {
   ctx.save();
   ctx.shadowBlur = 18;
   ctx.shadowColor = colors.pink;
-  ctx.strokeStyle = `rgba(255, 52, 127, ${0.55 + glow})`;
+  ctx.strokeStyle = `rgba(139, 91, 52, ${0.5 + glow})`;
   ctx.lineWidth = 3;
 
   const gates = [
@@ -1108,7 +1109,7 @@ function drawGateTriangle(x, y, rotation) {
   ctx.lineTo(13, 11);
   ctx.lineTo(-13, 11);
   ctx.closePath();
-  ctx.fillStyle = "rgba(255, 52, 127, 0.74)";
+  ctx.fillStyle = "rgba(142, 98, 255, 0.5)";
   ctx.fill();
   ctx.restore();
 }
@@ -1123,7 +1124,7 @@ function drawPulseWave() {
   ctx.save();
   ctx.shadowColor = colors.cyan;
   ctx.shadowBlur = 30;
-  ctx.strokeStyle = `rgba(111, 247, 255, ${0.9 * alpha})`;
+  ctx.strokeStyle = `rgba(141, 255, 213, ${0.85 * alpha})`;
   ctx.lineWidth = 8 * alpha + 2;
   ctx.beginPath();
   ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
@@ -1131,7 +1132,7 @@ function drawPulseWave() {
 
   ctx.shadowColor = colors.pink;
   ctx.shadowBlur = 24;
-  ctx.strokeStyle = `rgba(255, 95, 199, ${0.55 * alpha})`;
+  ctx.strokeStyle = `rgba(196, 124, 255, ${0.5 * alpha})`;
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.arc(c.x, c.y, radius * 0.72, 0, Math.PI * 2);
@@ -1551,11 +1552,24 @@ function drawEngineFlare(x, y, color) {
 function drawProjectiles() {
   for (const p of state.projectiles) {
     ctx.save();
+    const speed = Math.hypot(p.vx, p.vy) || 1;
+    const nx = p.vx / speed;
+    const ny = p.vy / speed;
+    const px = -ny;
+    const py = nx;
+    const startX = p.x - p.vx * 0.035;
+    const startY = p.y - p.vy * 0.035;
+    const endX = p.x + p.vx * 0.008;
+    const endY = p.y + p.vy * 0.008;
     ctx.beginPath();
-    ctx.moveTo(p.x - p.vx * 0.035, p.y - p.vy * 0.035);
-    ctx.lineTo(p.x + p.vx * 0.008, p.y + p.vy * 0.008);
+    ctx.moveTo(startX, startY);
+    for (let i = 1; i <= 4; i += 1) {
+      const t = i / 4;
+      const jitter = Math.sin(state.time * 38 + p.seed + i * 1.7) * 4;
+      ctx.lineTo(startX + (endX - startX) * t + px * jitter, startY + (endY - startY) * t + py * jitter);
+    }
     ctx.strokeStyle = p.color;
-    ctx.lineWidth = 2.4;
+    ctx.lineWidth = 2.1;
     ctx.shadowColor = p.color;
     ctx.shadowBlur = 18;
     ctx.stroke();
@@ -1606,9 +1620,9 @@ function loop(now) {
 
 ui.startButton.addEventListener("click", () => {
   unlockAudio();
-  ui.overlay.querySelector(".kicker").textContent = "Single Tower Defense";
-  ui.overlay.querySelector("h1").textContent = "Neon Core Defense";
-  ui.overlayMessage.textContent = "Hold the center reactor against edge-born drones. Your turret aims and fires automatically.";
+  ui.overlay.querySelector(".kicker").textContent = "Ancient Seal Defense";
+  ui.overlay.querySelector("h1").textContent = "Slither";
+  ui.overlayMessage.textContent = "Hold the Ancient Seal against the things below. Your wards aim and strike automatically.";
   ui.runReport.classList.add("hidden");
   ui.runReport.innerHTML = "";
   ui.startButton.textContent = "Start Defense";
