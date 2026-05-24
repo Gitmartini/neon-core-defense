@@ -65,6 +65,7 @@ const state = {
   runStats: null,
   spawnTimer: 0,
   spawnBudget: 0,
+  interceptorBudget: 0,
   waveBreak: 1.5,
   upgrades: {
     damage: { level: 1, cost: 40 },
@@ -286,7 +287,8 @@ function resetGame() {
     upgradesBought: Object.fromEntries(Object.keys(state.upgrades).map((kind) => [kind, 0])),
     lastUpgrade: null
   };
-  state.spawnBudget = 10;
+  state.interceptorBudget = state.wave * 2;
+  state.spawnBudget = 10 + state.interceptorBudget;
   state.spawnTimer = 0.2;
   state.waveBreak = 1.5;
   state.upgrades.damage = { level: 1, cost: 40 };
@@ -397,6 +399,11 @@ function spawnEnemy() {
 }
 
 function chooseEnemyType() {
+  if (state.interceptorBudget > 0 && (state.spawnBudget <= state.interceptorBudget || Math.random() < 0.45)) {
+    state.interceptorBudget -= 1;
+    return "interceptor";
+  }
+
   const roll = Math.random();
   if (state.wave > 4 && roll > 0.82) return "artillery";
   if (state.wave > 3 && roll > 0.64) return "dreadnought";
@@ -407,7 +414,8 @@ function chooseEnemyType() {
 
 function nextWave() {
   state.wave += 1;
-  state.spawnBudget = 8 + state.wave * 3;
+  state.interceptorBudget = state.wave * 2;
+  state.spawnBudget = 8 + state.wave * 3 + state.interceptorBudget;
   state.spawnTimer = 0.4;
   state.waveBreak = 1.4;
   state.credits += 18 + state.wave * 3;
@@ -548,6 +556,18 @@ function burst(x, y, color, count) {
   }
 }
 
+function coreImpactExplosion(enemy) {
+  const c = center();
+  const angle = Math.atan2(enemy.y - c.y, enemy.x - c.x);
+  const impactX = c.x + Math.cos(angle) * 38;
+  const impactY = c.y + Math.sin(angle) * 38;
+
+  burst(impactX, impactY, colors.orange, 18);
+  burst(impactX, impactY, colors.red, 14);
+  burst(impactX + Math.cos(angle) * 9, impactY + Math.sin(angle) * 9, colors.amber, 8);
+  burst(c.x, c.y, colors.cyan, 6);
+}
+
 function update(dt) {
   if (!state.running || state.paused) return;
 
@@ -610,7 +630,7 @@ function updateEnemies(dt) {
       state.health = Math.max(0, state.health - enemy.damage);
       state.shake = 9;
       playSound("coreDamaged", { volume: 0.62, cooldown: 180 });
-      burst(enemy.x, enemy.y, colors.red, 20);
+      coreImpactExplosion(enemy);
       state.enemies.splice(i, 1);
       if (state.health <= 0) endGame();
     }
