@@ -39,13 +39,8 @@ function harshNoise(i) {
   return clamp(noise(i * 3.1) - noise(i * 0.91));
 }
 
-function metallic(t, base, decay = 18) {
-  return (
-    0.45 * sine(base, t) +
-    0.24 * sine(base * 1.37, t) +
-    0.18 * sine(base * 2.11, t) +
-    0.13 * sine(base * 2.83, t)
-  ) * Math.exp(-t * decay);
+function softClip(value) {
+  return Math.tanh(value * 1.6) / Math.tanh(1.6);
 }
 
 function render(duration, generator) {
@@ -90,46 +85,44 @@ const sounds = [
     file: "tower-fire.wav",
     label: "Tower Fire",
     attachesTo: "Each turret shot",
-    samples: render(0.13, (t, i) => {
-      const crack = harshNoise(i) * Math.exp(-t * 95);
-      const ballisticThump = sine(82 - t * 160, t) * Math.exp(-t * 34);
-      const railZap = sine(1800 - t * 7200, t) * Math.exp(-t * 42);
-      const metalSnap = metallic(t, 760, 38);
-      return (0.58 * crack + 0.54 * ballisticThump + 0.28 * railZap + 0.35 * metalSnap) * snapEnvelope(t, 0.13);
+    samples: render(0.075, (t, i) => {
+      const muzzleSnap = harshNoise(i) * Math.exp(-t * 130);
+      const kineticPop = sine(95 - t * 140, t) * Math.exp(-t * 55);
+      const laserZap = sine(2600 - t * 18000, t) * Math.exp(-t * 72);
+      return softClip(0.58 * muzzleSnap + 0.5 * kineticPop + 0.38 * laserZap) * snapEnvelope(t, 0.075);
     })
   },
   {
     file: "enemy-hit.wav",
     label: "Enemy Hit",
     attachesTo: "Projectile damages an enemy",
-    samples: render(0.16, (t, i) => {
-      const armorPing = metallic(t, 1180, 22);
-      const shard = harshNoise(i) * Math.exp(-t * 55);
-      const lowTap = sine(155 - t * 180, t) * Math.exp(-t * 25);
-      return (0.36 * armorPing + 0.32 * shard + 0.22 * lowTap) * snapEnvelope(t, 0.16);
+    samples: render(0.095, (t, i) => {
+      const impactDust = harshNoise(i) * Math.exp(-t * 75);
+      const smallPop = sine(185 - t * 260, t) * Math.exp(-t * 38);
+      const shieldSizzle = sine(1500 - t * 5000, t) * Math.exp(-t * 55);
+      return softClip(0.34 * impactDust + 0.28 * smallPop + 0.16 * shieldSizzle) * snapEnvelope(t, 0.095);
     })
   },
   {
     file: "enemy-destroyed.wav",
     label: "Enemy Destroyed",
     attachesTo: "Enemy explodes and awards credits",
-    samples: render(0.58, (t, i) => {
-      const boom = sine(92 - t * 80, t) * Math.exp(-t * 5.5);
-      const metalBurst = harshNoise(i) * Math.exp(-t * 10);
-      const hullRings = metallic(t, 420, 9) + 0.5 * metallic(t, 930, 13);
-      const sparkGate = Math.sin(t * Math.PI * 42) > 0.2 ? 1 : 0.35;
-      return 0.62 * boom + 0.34 * metalBurst * sparkGate + 0.28 * hullRings;
+    samples: render(0.34, (t, i) => {
+      const pop = sine(78 - t * 70, t) * Math.exp(-t * 7.2);
+      const blastNoise = harshNoise(i) * Math.exp(-t * 14);
+      const plasmaFizzle = sine(620 + t * 950, t) * Math.exp(-t * 12);
+      return softClip(0.7 * pop + 0.36 * blastNoise + 0.12 * plasmaFizzle);
     })
   },
   {
     file: "core-damaged.wav",
     label: "Core Damaged",
     attachesTo: "Enemy or artillery shot hurts the core",
-    samples: render(0.48, (t, i) => {
-      const hullGroan = sine(72 - t * 36, t) * Math.exp(-t * 4.5);
-      const impact = harshNoise(i) * Math.exp(-t * 18);
-      const metalRing = metallic(t, 310, 7);
-      return 0.48 * hullGroan + 0.24 * impact + 0.26 * metalRing;
+    samples: render(0.42, (t, i) => {
+      const heavyHit = sine(68 - t * 26, t) * Math.exp(-t * 5.5);
+      const impact = harshNoise(i) * Math.exp(-t * 22);
+      const warningBuzz = sine(210, t) * Math.exp(-t * 7);
+      return softClip(0.58 * heavyHit + 0.2 * impact + 0.16 * warningBuzz);
     })
   },
   {
@@ -175,12 +168,12 @@ const sounds = [
     label: "Game Over",
     attachesTo: "Core destroyed",
     samples: render(1.25, (t, i) => {
-      const blast = sine(58 - t * 30, t) * Math.exp(-t * 2.8);
-      const debris = harshNoise(i) * Math.exp(-t * 5.2);
-      const reactorFall = sine(320 - t * 230, t) * Math.exp(-t * 1.7);
-      const hullRing = metallic(t, 190, 3.8) + 0.45 * metallic(t, 520, 5.5);
-      const aftershock = t > 0.22 ? sine(44, t - 0.22) * Math.exp(-(t - 0.22) * 4.5) : 0;
-      return 0.72 * blast + 0.34 * debris + 0.25 * reactorFall + 0.28 * hullRing + 0.36 * aftershock;
+      const initialBlast = sine(46 - t * 18, t) * Math.exp(-t * 2.2);
+      const shockNoise = harshNoise(i) * Math.exp(-t * 5.8);
+      const reactorCollapse = sine(210 - t * 170, t) * Math.exp(-t * 2.3);
+      const aftershock = t > 0.18 ? sine(39, t - 0.18) * Math.exp(-(t - 0.18) * 3.4) : 0;
+      const smokeTail = harshNoise(i * 0.37) * Math.exp(-t * 2.1) * 0.12;
+      return softClip(0.9 * initialBlast + 0.36 * shockNoise + 0.28 * reactorCollapse + 0.42 * aftershock + smokeTail);
     })
   }
 ];
