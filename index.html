@@ -9,8 +9,10 @@
   <body>
     <main class="shell">
       <section class="hud" aria-label="Game status">
-        <button class="help-button" id="briefingHelpButton" type="button" aria-label="Open mission briefing">?</button>
-        <button class="mute-button" id="muteButton" type="button" aria-label="Mute sounds">SFX</button>
+        <div class="hud-tools" aria-label="Utility controls" title="Sound and help">
+          <button class="mute-button" id="muteButton" type="button" aria-label="Mute sounds">SFX</button>
+          <button class="help-button" id="briefingHelpButton" type="button" aria-label="Open mission briefing">?</button>
+        </div>
         <div class="stat-card stat-card--core">
           <p class="label">Core</p>
           <span class="ui-icon" aria-hidden="true">
