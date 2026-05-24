@@ -82,15 +82,10 @@ function writeWav(fileName, samples) {
 
 const sounds = [
   {
-    file: "tower-fire.wav",
+    file: "tower-fire.mp3",
     label: "Tower Fire",
     attachesTo: "Each turret shot",
-    samples: render(0.075, (t, i) => {
-      const muzzleSnap = harshNoise(i) * Math.exp(-t * 130);
-      const kineticPop = sine(95 - t * 140, t) * Math.exp(-t * 55);
-      const laserZap = sine(2600 - t * 18000, t) * Math.exp(-t * 72);
-      return softClip(0.58 * muzzleSnap + 0.5 * kineticPop + 0.38 * laserZap) * snapEnvelope(t, 0.075);
-    })
+    external: true
   },
   {
     file: "enemy-hit.wav",
@@ -104,15 +99,10 @@ const sounds = [
     })
   },
   {
-    file: "enemy-destroyed.wav",
+    file: "enemy-destroyed.mp3",
     label: "Enemy Destroyed",
     attachesTo: "Enemy explodes and awards credits",
-    samples: render(0.34, (t, i) => {
-      const pop = sine(78 - t * 70, t) * Math.exp(-t * 7.2);
-      const blastNoise = harshNoise(i) * Math.exp(-t * 14);
-      const plasmaFizzle = sine(620 + t * 950, t) * Math.exp(-t * 12);
-      return softClip(0.7 * pop + 0.36 * blastNoise + 0.12 * plasmaFizzle);
-    })
+    external: true
   },
   {
     file: "core-damaged.wav",
@@ -179,7 +169,9 @@ const sounds = [
 ];
 
 for (const sound of sounds) {
-  writeWav(sound.file, sound.samples);
+  if (!sound.external) {
+    writeWav(sound.file, sound.samples);
+  }
 }
 
 const previewHtml = `<!doctype html>

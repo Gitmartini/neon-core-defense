@@ -137,9 +137,9 @@ for (const [name, src] of Object.entries(stationSpriteSources)) {
 }
 
 const soundSources = {
-  towerFire: "assets/sounds/tower-fire.wav",
+  towerFire: "assets/sounds/tower-fire.mp3",
   enemyHit: "assets/sounds/enemy-hit.wav",
-  enemyDestroyed: "assets/sounds/enemy-destroyed.wav",
+  enemyDestroyed: "assets/sounds/enemy-destroyed.mp3",
   coreDamaged: "assets/sounds/core-damaged.wav",
   emergencyPulse: "assets/sounds/emergency-pulse.wav",
   upgradePurchase: "assets/sounds/upgrade-purchase.wav",
