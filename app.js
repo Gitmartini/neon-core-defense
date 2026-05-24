@@ -27,6 +27,7 @@ const ui = {
   hullLevel: document.getElementById("hullLevel"),
   repairLevel: document.getElementById("repairLevel"),
   patchLevel: document.getElementById("patchLevel"),
+  targetAiLevel: document.getElementById("targetAiLevel"),
   damageCost: document.getElementById("damageCost"),
   rateCost: document.getElementById("rateCost"),
   rangeCost: document.getElementById("rangeCost"),
@@ -35,6 +36,7 @@ const ui = {
   hullCost: document.getElementById("hullCost"),
   repairCost: document.getElementById("repairCost"),
   patchCost: document.getElementById("patchCost"),
+  targetAiCost: document.getElementById("targetAiCost"),
   upgrades: [...document.querySelectorAll(".upgrade")]
 };
 
@@ -75,18 +77,20 @@ const state = {
     piercing: { level: 1, cost: 70 },
     hull: { level: 1, cost: 65 },
     repair: { level: 1, cost: 55 },
-    patch: { level: "+", cost: 35 }
+    patch: { level: "+", cost: 35 },
+    targetAi: { level: 0, cost: 240 }
   },
   tower: {
     angle: 0,
-    gunAngles: [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5],
-    gunBases: [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5],
+    gunAngles: [0, Math.PI, -Math.PI * 0.5, Math.PI * 0.5],
+    gunBases: [0, Math.PI, -Math.PI * 0.5, Math.PI * 0.5],
     cooldown: 0,
     damage: 16,
     piercing: 0,
     fireDelay: 0.42,
     range: 245,
-    split: 1
+    split: 1,
+    targetMode: "focus"
   }
 };
 
@@ -109,7 +113,8 @@ const upgradeLabels = {
   piercing: "Piercing",
   hull: "Core HP",
   repair: "Repair Rate",
-  patch: "Patch Core"
+  patch: "Patch Core",
+  targetAi: "Target AI"
 };
 
 const bestScoreKey = "neonCoreDefense.bestScore";
@@ -299,6 +304,7 @@ function resetGame() {
   state.upgrades.hull = { level: 1, cost: 65 };
   state.upgrades.repair = { level: 1, cost: 55 };
   state.upgrades.patch = { level: "+", cost: 35 };
+  state.upgrades.targetAi = { level: 0, cost: 240 };
   state.maxHealth = 100;
   state.health = state.maxHealth;
   state.repairRate = 0.6;
@@ -308,6 +314,7 @@ function resetGame() {
   state.tower.fireDelay = 0.42;
   state.tower.range = 245;
   state.tower.split = 1;
+  state.tower.targetMode = "focus";
   ui.overlay.classList.add("hidden");
   ui.runReport.classList.add("hidden");
   playSound("waveStart", { volume: 0.42, cooldown: 500 });
@@ -441,11 +448,13 @@ function calculateProjectileDamage(enemy, rawDamage) {
   return Math.max(damageFloor, rawDamage - effectiveArmor);
 }
 
-function findTarget() {
+function findTarget(options = {}) {
   const c = center();
+  const excluded = options.excluded || new Set();
   let best = null;
   let bestDist = Infinity;
   for (const enemy of state.enemies) {
+    if (excluded.has(enemy)) continue;
     const dist = Math.hypot(enemy.x - c.x, enemy.y - c.y);
     if (dist < state.tower.range && dist < bestDist) {
       best = enemy;
@@ -455,14 +464,74 @@ function findTarget() {
   return best;
 }
 
+function selectGunTargets(primaryTarget) {
+  const shots = activeGunCount();
+  if (state.tower.targetMode !== "split" || state.upgrades.targetAi.level < 1 || shots <= 1) {
+    return Array.from({ length: shots }, () => primaryTarget);
+  }
+
+  const assigned = new Set();
+  return Array.from({ length: shots }, () => {
+    const target = findTarget({ excluded: assigned }) || findTarget();
+    if (target) assigned.add(target);
+    return target || primaryTarget;
+  });
+}
+
+function enemyVelocity(enemy) {
+  const c = center();
+  const angle = Math.atan2(c.y - enemy.y, c.x - enemy.x);
+  const dist = Math.hypot(enemy.x - c.x, enemy.y - c.y);
+
+  if (enemy.type === "artillery" && dist <= enemy.stopRange) {
+    const tangent = angle + Math.PI / 2;
+    return {
+      x: Math.cos(tangent) * enemy.speed * 0.26 * enemy.strafe,
+      y: Math.sin(tangent) * enemy.speed * 0.26 * enemy.strafe
+    };
+  }
+
+  return {
+    x: Math.cos(angle) * enemy.speed,
+    y: Math.sin(angle) * enemy.speed
+  };
+}
+
+function predictiveAimPoint(muzzle, enemy, projectileSpeed) {
+  const velocity = enemyVelocity(enemy);
+  const dx = enemy.x - muzzle.x;
+  const dy = enemy.y - muzzle.y;
+  const a = velocity.x * velocity.x + velocity.y * velocity.y - projectileSpeed * projectileSpeed;
+  const b = 2 * (dx * velocity.x + dy * velocity.y);
+  const c = dx * dx + dy * dy;
+  const discriminant = b * b - 4 * a * c;
+
+  let t = Math.sqrt(c) / projectileSpeed;
+  if (Math.abs(a) > 0.0001 && discriminant >= 0) {
+    const root = Math.sqrt(discriminant);
+    const candidates = [(-b - root) / (2 * a), (-b + root) / (2 * a)].filter((value) => value > 0);
+    if (candidates.length) t = Math.min(...candidates);
+  }
+
+  t = Math.max(0, Math.min(0.8, t));
+  return {
+    x: enemy.x + velocity.x * t,
+    y: enemy.y + velocity.y * t
+  };
+}
+
 function fireAt(target) {
   const c = center();
-  const baseAngle = Math.atan2(target.y - c.y, target.x - c.x);
-  const shots = activeGunCount();
+  const targets = selectGunTargets(target);
+  const primaryAim = predictiveAimPoint(c, targets.find(Boolean) || target, 720);
+  const baseAngle = Math.atan2(primaryAim.y - c.y, primaryAim.x - c.x);
 
-  for (let i = 0; i < shots; i += 1) {
+  for (let i = 0; i < targets.length; i += 1) {
+    const gunTarget = targets[i];
+    if (!gunTarget) continue;
     const muzzle = gunMuzzlePoint(i);
-    const angle = Math.atan2(target.y - muzzle.y, target.x - muzzle.x);
+    const aim = predictiveAimPoint(muzzle, gunTarget, 720);
+    const angle = Math.atan2(aim.y - muzzle.y, aim.x - muzzle.x);
     state.projectiles.push({
       x: muzzle.x,
       y: muzzle.y,
@@ -822,6 +891,13 @@ function formatNumber(value) {
 
 function buyUpgrade(kind) {
   if (!state.running || state.paused) return;
+  if (kind === "targetAi" && state.upgrades.targetAi.level > 0) {
+    state.tower.targetMode = state.tower.targetMode === "focus" ? "split" : "focus";
+    playSound("pauseToggle", { volume: 0.32, rate: state.tower.targetMode === "split" ? 1.18 : 0.92, cooldown: 80 });
+    updateUi();
+    return;
+  }
+
   const upgrade = state.upgrades[kind];
   if (state.credits < upgrade.cost) return;
   if (kind === "patch" && state.health >= state.maxHealth) return;
@@ -841,6 +917,7 @@ function buyUpgrade(kind) {
   }
   if (kind === "repair") state.repairRate += 0.85;
   if (kind === "patch") state.health = Math.min(state.maxHealth, state.health + 45);
+  if (kind === "targetAi") state.tower.targetMode = "split";
 
   if (state.runStats) {
     state.runStats.upgradesBought[kind] += 1;
@@ -877,10 +954,17 @@ function updateUi() {
     ui[`${kind}Level`].textContent = state.upgrades[kind].level;
     ui[`${kind}Cost`].textContent = `Cost ${state.upgrades[kind].cost}`;
   }
+  ui.targetAiLevel.textContent = state.upgrades.targetAi.level > 0 ? state.tower.targetMode[0].toUpperCase() + state.tower.targetMode.slice(1) : "Buy";
+  ui.targetAiCost.textContent = state.upgrades.targetAi.level > 0 ? "Focus / Split" : `Cost ${state.upgrades.targetAi.cost}`;
 
   ui.upgrades.forEach((button) => {
     const kind = button.dataset.upgrade;
-    button.disabled = !state.running || state.paused || state.credits < state.upgrades[kind].cost || (kind === "split" && state.tower.split >= state.tower.gunBases.length) || (kind === "patch" && state.health >= state.maxHealth);
+    const boughtToggle = kind === "targetAi" && state.upgrades.targetAi.level > 0;
+    button.disabled = !state.running || state.paused || (!boughtToggle && state.credits < state.upgrades[kind].cost) || (kind === "split" && state.tower.split >= state.tower.gunBases.length) || (kind === "patch" && state.health >= state.maxHealth);
+    if (kind === "targetAi") {
+      button.classList.toggle("is-bought", state.upgrades.targetAi.level > 0);
+      button.dataset.mode = state.tower.targetMode;
+    }
   });
 }
 
@@ -1050,15 +1134,18 @@ function drawTower() {
     drawProceduralStationBase();
   }
 
+  const visualTargets = selectGunTargets(findTarget());
   for (let i = 0; i < activeGunCount(); i += 1) {
     const current = state.tower.gunAngles[i];
     const base = state.tower.gunBases[i];
     const mountX = c.x + Math.cos(base) * 88;
     const mountY = c.y + Math.sin(base) * 88;
-    const targetAngle = Math.atan2(
-      c.y + Math.sin(state.tower.angle) * state.tower.range - mountY,
-      c.x + Math.cos(state.tower.angle) * state.tower.range - mountX
-    );
+    const target = visualTargets[i];
+    const aim = target ? predictiveAimPoint({ x: mountX, y: mountY }, target, 720) : {
+      x: c.x + Math.cos(state.tower.angle) * state.tower.range,
+      y: c.y + Math.sin(state.tower.angle) * state.tower.range
+    };
+    const targetAngle = Math.atan2(aim.y - mountY, aim.x - mountX);
     const targetDiff = angleDifference(targetAngle, base);
     const localLimit = activeGunCount() === 1 ? Math.PI : Math.PI * 0.23;
     const localAim = Math.max(-localLimit, Math.min(localLimit, targetDiff));

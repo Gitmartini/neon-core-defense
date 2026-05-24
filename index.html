@@ -97,6 +97,7 @@
                   <div><dt>Core HP</dt><dd>Stronger core.</dd></div>
                   <div><dt>Repair Rate</dt><dd>Passive healing.</dd></div>
                   <div><dt>Patch Core</dt><dd>Instant repair.</dd></div>
+                  <div><dt>Target AI</dt><dd>Focus or split fire.</dd></div>
                 </dl>
               </section>
             </div>
@@ -146,18 +147,6 @@
           <strong id="rangeLevel">1</strong>
           <small id="rangeCost">Cost 45</small>
         </button>
-        <button class="upgrade" data-upgrade="split" type="button">
-          <span class="ui-icon" aria-hidden="true">
-            <svg viewBox="0 0 64 64">
-              <path d="M12 42h25v8H12zM18 34h13l5 8H18z"></path>
-              <path d="M37 38h17v8H37zM18 50v7m13-7v7m16-11v7"></path>
-              <path d="M49 12v16m-8-8h16"></path>
-            </svg>
-          </span>
-          <span>Add Gun</span>
-          <strong id="splitLevel">1</strong>
-          <small id="splitCost">Cost 320</small>
-        </button>
         <button class="upgrade" data-upgrade="piercing" type="button">
           <span class="ui-icon" aria-hidden="true">
             <svg viewBox="0 0 64 64">
@@ -168,17 +157,6 @@
           <span>Piercing</span>
           <strong id="piercingLevel">1</strong>
           <small id="piercingCost">Cost 70</small>
-        </button>
-        <button class="upgrade" data-upgrade="hull" type="button">
-          <span class="ui-icon" aria-hidden="true">
-            <svg viewBox="0 0 64 64">
-              <path d="M32 6 52 14v15c0 14-8 24-20 29C20 53 12 43 12 29V14Z"></path>
-              <path d="M32 22v20M22 32h20"></path>
-            </svg>
-          </span>
-          <span>Core HP</span>
-          <strong id="hullLevel">1</strong>
-          <small id="hullCost">Cost 65</small>
         </button>
         <button class="upgrade" data-upgrade="repair" type="button">
           <span class="ui-icon" aria-hidden="true">
@@ -192,6 +170,29 @@
           <strong id="repairLevel">1</strong>
           <small id="repairCost">Cost 55</small>
         </button>
+        <button class="upgrade" data-upgrade="hull" type="button">
+          <span class="ui-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <path d="M32 6 52 14v15c0 14-8 24-20 29C20 53 12 43 12 29V14Z"></path>
+              <path d="M32 22v20M22 32h20"></path>
+            </svg>
+          </span>
+          <span>Core HP</span>
+          <strong id="hullLevel">1</strong>
+          <small id="hullCost">Cost 65</small>
+        </button>
+        <button class="upgrade" data-upgrade="split" type="button">
+          <span class="ui-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <path d="M12 42h25v8H12zM18 34h13l5 8H18z"></path>
+              <path d="M37 38h17v8H37zM18 50v7m13-7v7m16-11v7"></path>
+              <path d="M49 12v16m-8-8h16"></path>
+            </svg>
+          </span>
+          <span>Add Gun</span>
+          <strong id="splitLevel">1</strong>
+          <small id="splitCost">Cost 320</small>
+        </button>
         <button class="upgrade" data-upgrade="patch" type="button">
           <span class="ui-icon" aria-hidden="true">
             <svg viewBox="0 0 64 64">
@@ -202,6 +203,24 @@
           <span>Patch Core</span>
           <strong id="patchLevel">+</strong>
           <small id="patchCost">Cost 35</small>
+        </button>
+        <button class="upgrade upgrade--target-ai" data-upgrade="targetAi" type="button">
+          <span class="ui-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <circle cx="18" cy="32" r="6"></circle>
+              <circle cx="49" cy="16" r="4"></circle>
+              <circle cx="52" cy="32" r="4"></circle>
+              <circle cx="49" cy="48" r="4"></circle>
+              <path d="M24 32h20M23 29 45 17M23 35l22 12"></path>
+            </svg>
+          </span>
+          <span>Target AI</span>
+          <strong id="targetAiLevel">Buy</strong>
+          <small id="targetAiCost">Cost 240</small>
+          <span class="target-toggle" aria-hidden="true">
+            <b data-mode="focus">Focus</b>
+            <b data-mode="split">Split</b>
+          </span>
         </button>
       </section>
     </main>
