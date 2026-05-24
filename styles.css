@@ -22,6 +22,9 @@ html,
 body {
   height: 100%;
   min-height: 100%;
+  /* Android WebView text scaling can otherwise clip compact upgrade labels. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -598,56 +601,61 @@ canvas {
 .upgrade {
   min-height: 0;
   min-width: 0;
-  padding: 4px 5px;
+  padding: 4px;
   border-radius: 4px;
   text-align: left;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr);
   grid-template-rows: auto auto auto;
-  column-gap: 5px;
+  column-gap: 4px;
   align-items: center;
 }
 
 .upgrade[data-upgrade="patch"] {
   grid-column: 1 / -1;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
 }
 
 .upgrade span,
 .upgrade strong,
 .upgrade small {
   display: block;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .upgrade .ui-icon {
   grid-row: 1 / 4;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .upgrade[data-upgrade="patch"] .ui-icon {
-  width: 27px;
-  height: 27px;
+  width: 23px;
+  height: 23px;
 }
 
-.upgrade span {
+.upgrade > span:not(.ui-icon) {
   color: var(--cyan);
-  font-size: 0.58rem;
+  font-size: 9px;
   font-weight: 800;
-  line-height: 1.05;
+  line-height: 1;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .upgrade strong {
   margin: 1px 0;
   color: var(--lime);
-  font-size: 0.8rem;
+  font-size: 17px;
   line-height: 1;
 }
 
 .upgrade small {
   color: var(--muted);
-  font-size: 0.5rem;
-  line-height: 1.05;
+  font-size: 9px;
+  line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .upgrade[data-upgrade="damage"] span,
