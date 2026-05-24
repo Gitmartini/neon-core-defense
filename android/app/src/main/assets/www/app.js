@@ -65,7 +65,7 @@ const state = {
     damage: { level: 1, cost: 40 },
     rate: { level: 1, cost: 50 },
     range: { level: 1, cost: 45 },
-    split: { level: 1, cost: 160 },
+    split: { level: 1, cost: 320 },
     piercing: { level: 1, cost: 70 },
     hull: { level: 1, cost: 65 },
     repair: { level: 1, cost: 55 },
@@ -107,7 +107,7 @@ const upgradeLabels = {
 };
 
 const bestScoreKey = "neonCoreDefense.bestScore";
-const pulseChargeFactor = 0.72;
+const pulseChargeFactor = 0.45;
 
 const enemySpriteSources = {
   interceptor: "assets/ships/interceptor.png",
@@ -184,7 +184,7 @@ const enemyTypes = {
     radius: 13,
     hp: 43,
     hpScale: 9.6,
-    armor: 2,
+    armor: 3,
     speed: 58,
     speedScale: 3,
     value: 16,
@@ -197,9 +197,9 @@ const enemyTypes = {
   },
   dreadnought: {
     radius: 20,
-    hp: 92,
-    hpScale: 18,
-    armor: 8,
+    hp: 130,
+    hpScale: 26,
+    armor: 16,
     speed: 31,
     speedScale: 2,
     value: 29,
@@ -214,7 +214,7 @@ const enemyTypes = {
     radius: 16,
     hp: 58,
     hpScale: 12,
-    armor: 4,
+    armor: 6,
     speed: 45,
     speedScale: 2.5,
     value: 24,
@@ -232,7 +232,7 @@ const enemyTypes = {
     radius: 12,
     hp: 36,
     hpScale: 8.4,
-    armor: 3,
+    armor: 5,
     speed: 76,
     speedScale: 4,
     value: 18,
@@ -285,7 +285,7 @@ function resetGame() {
   state.upgrades.damage = { level: 1, cost: 40 };
   state.upgrades.rate = { level: 1, cost: 50 };
   state.upgrades.range = { level: 1, cost: 45 };
-  state.upgrades.split = { level: 1, cost: 160 };
+  state.upgrades.split = { level: 1, cost: 320 };
   state.upgrades.piercing = { level: 1, cost: 70 };
   state.upgrades.hull = { level: 1, cost: 65 };
   state.upgrades.repair = { level: 1, cost: 55 };
