@@ -18,6 +18,7 @@ const ui = {
   briefingBeginButton: document.getElementById("briefingBeginButton"),
   briefingDontShow: document.getElementById("briefingDontShow"),
   briefingHelpButton: document.getElementById("briefingHelpButton"),
+  muteButton: document.getElementById("muteButton"),
   pauseButton: document.getElementById("pauseButton"),
   damageLevel: document.getElementById("damageLevel"),
   rateLevel: document.getElementById("rateLevel"),
@@ -39,6 +40,20 @@ const ui = {
   targetAiCost: document.getElementById("targetAiCost"),
   upgrades: [...document.querySelectorAll(".upgrade")]
 };
+
+function createInitialUpgrades() {
+  return {
+    damage: { level: 1, cost: 50 },
+    rate: { level: 1, cost: 65 },
+    range: { level: 1, cost: 60 },
+    split: { level: 1, cost: 420 },
+    piercing: { level: 1, cost: 95 },
+    hull: { level: 1, cost: 85 },
+    repair: { level: 1, cost: 75 },
+    patch: { level: "+", cost: 45 },
+    targetAi: { level: 0, cost: 240 }
+  };
+}
 
 const state = {
   running: false,
@@ -69,17 +84,7 @@ const state = {
   spawnBudget: 0,
   interceptorBudget: 0,
   waveBreak: 1.5,
-  upgrades: {
-    damage: { level: 1, cost: 40 },
-    rate: { level: 1, cost: 50 },
-    range: { level: 1, cost: 45 },
-    split: { level: 1, cost: 320 },
-    piercing: { level: 1, cost: 70 },
-    hull: { level: 1, cost: 65 },
-    repair: { level: 1, cost: 55 },
-    patch: { level: "+", cost: 35 },
-    targetAi: { level: 0, cost: 240 }
-  },
+  upgrades: createInitialUpgrades(),
   tower: {
     angle: 0,
     gunAngles: [0, Math.PI, -Math.PI * 0.5, Math.PI * 0.5],
@@ -119,8 +124,10 @@ const upgradeLabels = {
 
 const bestScoreKey = "neonCoreDefense.bestScore";
 const briefingHiddenKey = "neonCoreDefense.hideBriefing";
+const soundMutedKey = "neonCoreDefense.soundMuted";
 const pulseChargeFactor = 0.45;
 let briefingAutoPaused = false;
+let soundMuted = localStorage.getItem(soundMutedKey) === "true";
 
 const enemySpriteSources = {
   interceptor: "assets/ships/interceptor.png",
@@ -181,10 +188,10 @@ const enemyTypes = {
   interceptor: {
     radius: 10,
     hp: 25,
-    hpScale: 6,
+    hpScale: 9,
     armor: 0,
     speed: 104,
-    speedScale: 5,
+    speedScale: 6,
     value: 12,
     damage: 6,
     color: colors.pink,
@@ -196,10 +203,10 @@ const enemyTypes = {
   raider: {
     radius: 13,
     hp: 43,
-    hpScale: 9.6,
-    armor: 3,
+    hpScale: 16,
+    armor: 4,
     speed: 58,
-    speedScale: 3,
+    speedScale: 4,
     value: 16,
     damage: 9,
     color: colors.cyan,
@@ -211,10 +218,10 @@ const enemyTypes = {
   dreadnought: {
     radius: 20,
     hp: 130,
-    hpScale: 26,
-    armor: 16,
+    hpScale: 42,
+    armor: 18,
     speed: 31,
-    speedScale: 2,
+    speedScale: 2.5,
     value: 29,
     damage: 16,
     color: colors.amber,
@@ -226,10 +233,10 @@ const enemyTypes = {
   artillery: {
     radius: 16,
     hp: 58,
-    hpScale: 12,
-    armor: 6,
+    hpScale: 22,
+    armor: 8,
     speed: 45,
-    speedScale: 2.5,
+    speedScale: 3.2,
     value: 24,
     damage: 0,
     color: colors.violet,
@@ -244,10 +251,10 @@ const enemyTypes = {
   droneLeader: {
     radius: 12,
     hp: 36,
-    hpScale: 8.4,
-    armor: 5,
+    hpScale: 14,
+    armor: 6,
     speed: 76,
-    speedScale: 4,
+    speedScale: 5,
     value: 18,
     damage: 8,
     color: colors.red,
@@ -293,18 +300,10 @@ function resetGame() {
     lastUpgrade: null
   };
   state.interceptorBudget = state.wave * 2;
-  state.spawnBudget = 10 + state.interceptorBudget;
+  state.spawnBudget = 10 + state.wave * 4 + state.interceptorBudget;
   state.spawnTimer = 0.2;
   state.waveBreak = 1.5;
-  state.upgrades.damage = { level: 1, cost: 40 };
-  state.upgrades.rate = { level: 1, cost: 50 };
-  state.upgrades.range = { level: 1, cost: 45 };
-  state.upgrades.split = { level: 1, cost: 320 };
-  state.upgrades.piercing = { level: 1, cost: 70 };
-  state.upgrades.hull = { level: 1, cost: 65 };
-  state.upgrades.repair = { level: 1, cost: 55 };
-  state.upgrades.patch = { level: "+", cost: 35 };
-  state.upgrades.targetAi = { level: 0, cost: 240 };
+  state.upgrades = createInitialUpgrades();
   state.maxHealth = 100;
   state.health = state.maxHealth;
   state.repairRate = 0.6;
@@ -375,7 +374,8 @@ function spawnEnemy() {
   const waveBoost = state.wave - 1;
   const type = chooseEnemyType();
   const template = enemyTypes[type];
-  const hp = template.hp + waveBoost * template.hpScale;
+  const hpMultiplier = 1 + waveBoost * 0.06;
+  const hp = (template.hp + waveBoost * template.hpScale) * hpMultiplier;
   const speed = template.speed + waveBoost * template.speedScale;
   const angleToCore = Math.atan2(state.height / 2 - y, state.width / 2 - x);
 
@@ -389,8 +389,8 @@ function spawnEnemy() {
     maxHp: hp,
     speed,
     value: template.value,
-    damage: template.damage,
-    armor: template.armor,
+    damage: template.damage + Math.floor(waveBoost * 0.55),
+    armor: template.armor + (type === "interceptor" ? 0 : Math.floor(waveBoost / 4)),
     color: template.color,
     accent: template.accent,
     sprite: template.sprite,
@@ -401,7 +401,7 @@ function spawnEnemy() {
     cooldown: rand(0.5, 1.8),
     stopRange: template.stopRange || 0,
     fireDelay: template.fireDelay || 0,
-    shotDamage: template.shotDamage || 0
+    shotDamage: (template.shotDamage || 0) + Math.floor(waveBoost * 0.45)
   });
 }
 
@@ -422,10 +422,10 @@ function chooseEnemyType() {
 function nextWave() {
   state.wave += 1;
   state.interceptorBudget = state.wave * 2;
-  state.spawnBudget = 8 + state.wave * 3 + state.interceptorBudget;
+  state.spawnBudget = 10 + state.wave * 4 + state.interceptorBudget;
   state.spawnTimer = 0.4;
   state.waveBreak = 1.4;
-  state.credits += 18 + state.wave * 3;
+  state.credits += 12 + state.wave * 2;
   playSound("waveStart", { volume: 0.42, cooldown: 500 });
   burst(center().x, center().y, colors.lime, 22);
 }
@@ -597,6 +597,7 @@ function unlockAudio() {
 }
 
 function playSound(name, options = {}) {
+  if (soundMuted) return;
   if (!audioUnlocked) return;
 
   const pool = soundPools[name];
@@ -614,6 +615,23 @@ function playSound(name, options = {}) {
   audio.volume = options.volume ?? 0.55;
   audio.playbackRate = options.rate ?? 1;
   audio.play().catch(() => {});
+}
+
+function updateMuteButton() {
+  ui.muteButton.textContent = soundMuted ? "Off" : "SFX";
+  ui.muteButton.classList.toggle("is-muted", soundMuted);
+  ui.muteButton.setAttribute("aria-label", soundMuted ? "Unmute sounds" : "Mute sounds");
+}
+
+function toggleMute() {
+  soundMuted = !soundMuted;
+  localStorage.setItem(soundMutedKey, soundMuted ? "true" : "false");
+  if (soundMuted) {
+    for (const pool of Object.values(soundPools)) {
+      for (const audio of pool.items) audio.pause();
+    }
+  }
+  updateMuteButton();
 }
 
 function burst(x, y, color, count) {
@@ -663,7 +681,7 @@ function update(dt) {
     if (state.spawnTimer <= 0) {
       spawnEnemy();
       state.spawnBudget -= 1;
-      state.spawnTimer = Math.max(0.18, 0.92 - state.wave * 0.035);
+      state.spawnTimer = Math.max(0.16, 0.82 - state.wave * 0.04);
     }
   } else if (state.enemies.length === 0) {
     state.waveBreak -= dt;
@@ -912,7 +930,7 @@ function buyUpgrade(kind) {
 
   state.credits -= upgrade.cost;
   if (kind !== "patch") upgrade.level += 1;
-  upgrade.cost = kind === "patch" ? Math.round(upgrade.cost * 1.25 + 8) : Math.round(upgrade.cost * 1.55 + 12);
+  upgrade.cost = kind === "patch" ? Math.round(upgrade.cost * 1.35 + 10) : Math.round(upgrade.cost * 1.72 + 18);
 
   if (kind === "damage") state.tower.damage += 7;
   if (kind === "rate") state.tower.fireDelay = Math.max(0.13, state.tower.fireDelay * 0.84);
@@ -1600,6 +1618,7 @@ ui.startButton.addEventListener("click", () => {
 ui.briefingCloseButton.addEventListener("click", hideBriefing);
 ui.briefingBeginButton.addEventListener("click", hideBriefing);
 ui.briefingHelpButton.addEventListener("click", () => showBriefing({ manual: true }));
+ui.muteButton.addEventListener("click", toggleMute);
 ui.pauseButton.addEventListener("click", togglePause);
 ui.pulseButton.addEventListener("click", activateEmergencyPulse);
 
@@ -1609,6 +1628,7 @@ ui.upgrades.forEach((button) => {
 
 window.addEventListener("resize", resize);
 resize();
+updateMuteButton();
 updateUi();
 if (localStorage.getItem(briefingHiddenKey) !== "true") {
   showBriefing();

@@ -73,6 +73,7 @@ button {
 
 .hud > div,
 .help-button,
+.mute-button,
 .pulse-button,
 .pause-button,
 .upgrade,
@@ -103,6 +104,31 @@ button {
   line-height: 1;
   text-shadow: 0 0 10px rgba(111, 247, 255, 0.8);
   cursor: pointer;
+}
+
+.mute-button {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 3;
+  width: 24px;
+  height: 23px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mute-button.is-muted {
+  border-color: rgba(255, 89, 111, 0.62);
+  color: var(--danger);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.035),
+    inset 0 0 18px rgba(255, 89, 111, 0.14),
+    0 0 16px rgba(255, 89, 111, 0.14);
 }
 
 .hud > div {
