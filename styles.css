@@ -411,6 +411,11 @@ canvas {
   color: var(--lime);
 }
 
+.upgrade[data-upgrade="piercing"] span,
+.upgrade[data-upgrade="piercing"] strong {
+  color: var(--hot);
+}
+
 .upgrade[data-upgrade="hull"] span,
 .upgrade[data-upgrade="hull"] strong {
   color: var(--amber);

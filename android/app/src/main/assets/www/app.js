@@ -18,6 +18,7 @@ const ui = {
   rateLevel: document.getElementById("rateLevel"),
   rangeLevel: document.getElementById("rangeLevel"),
   splitLevel: document.getElementById("splitLevel"),
+  piercingLevel: document.getElementById("piercingLevel"),
   hullLevel: document.getElementById("hullLevel"),
   repairLevel: document.getElementById("repairLevel"),
   patchLevel: document.getElementById("patchLevel"),
@@ -25,6 +26,7 @@ const ui = {
   rateCost: document.getElementById("rateCost"),
   rangeCost: document.getElementById("rangeCost"),
   splitCost: document.getElementById("splitCost"),
+  piercingCost: document.getElementById("piercingCost"),
   hullCost: document.getElementById("hullCost"),
   repairCost: document.getElementById("repairCost"),
   patchCost: document.getElementById("patchCost"),
@@ -63,7 +65,8 @@ const state = {
     damage: { level: 1, cost: 40 },
     rate: { level: 1, cost: 50 },
     range: { level: 1, cost: 45 },
-    split: { level: 1, cost: 135 },
+    split: { level: 1, cost: 160 },
+    piercing: { level: 1, cost: 70 },
     hull: { level: 1, cost: 65 },
     repair: { level: 1, cost: 55 },
     patch: { level: "+", cost: 35 }
@@ -74,6 +77,7 @@ const state = {
     gunBases: [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5],
     cooldown: 0,
     damage: 16,
+    piercing: 0,
     fireDelay: 0.42,
     range: 245,
     split: 1
@@ -96,6 +100,7 @@ const upgradeLabels = {
   rate: "Fire Rate",
   range: "Range",
   split: "Add Gun",
+  piercing: "Piercing",
   hull: "Core HP",
   repair: "Repair Rate",
   patch: "Patch Core"
@@ -163,7 +168,8 @@ const enemyTypes = {
   interceptor: {
     radius: 10,
     hp: 25,
-    hpScale: 5,
+    hpScale: 6,
+    armor: 0,
     speed: 104,
     speedScale: 5,
     value: 12,
@@ -177,7 +183,8 @@ const enemyTypes = {
   raider: {
     radius: 13,
     hp: 43,
-    hpScale: 8,
+    hpScale: 9.6,
+    armor: 2,
     speed: 58,
     speedScale: 3,
     value: 16,
@@ -191,7 +198,8 @@ const enemyTypes = {
   dreadnought: {
     radius: 20,
     hp: 92,
-    hpScale: 15,
+    hpScale: 18,
+    armor: 8,
     speed: 31,
     speedScale: 2,
     value: 29,
@@ -205,7 +213,8 @@ const enemyTypes = {
   artillery: {
     radius: 16,
     hp: 58,
-    hpScale: 10,
+    hpScale: 12,
+    armor: 4,
     speed: 45,
     speedScale: 2.5,
     value: 24,
@@ -222,7 +231,8 @@ const enemyTypes = {
   droneLeader: {
     radius: 12,
     hp: 36,
-    hpScale: 7,
+    hpScale: 8.4,
+    armor: 3,
     speed: 76,
     speedScale: 4,
     value: 18,
@@ -275,7 +285,8 @@ function resetGame() {
   state.upgrades.damage = { level: 1, cost: 40 };
   state.upgrades.rate = { level: 1, cost: 50 };
   state.upgrades.range = { level: 1, cost: 45 };
-  state.upgrades.split = { level: 1, cost: 135 };
+  state.upgrades.split = { level: 1, cost: 160 };
+  state.upgrades.piercing = { level: 1, cost: 70 };
   state.upgrades.hull = { level: 1, cost: 65 };
   state.upgrades.repair = { level: 1, cost: 55 };
   state.upgrades.patch = { level: "+", cost: 35 };
@@ -284,6 +295,7 @@ function resetGame() {
   state.repairRate = 0.6;
   state.tower.gunAngles = [...state.tower.gunBases];
   state.tower.damage = 16;
+  state.tower.piercing = 0;
   state.tower.fireDelay = 0.42;
   state.tower.range = 245;
   state.tower.split = 1;
@@ -339,6 +351,7 @@ function spawnEnemy() {
     speed,
     value: template.value,
     damage: template.damage,
+    armor: template.armor,
     color: template.color,
     accent: template.accent,
     sprite: template.sprite,
@@ -382,6 +395,12 @@ function recordEnemyDestroyed(enemy, options = {}) {
   state.credits += enemy.value;
   if (state.runStats) state.runStats.enemiesDestroyed += 1;
   if (options.chargePulse !== false) addPulseCharge(enemy.value * pulseChargeFactor);
+}
+
+function calculateProjectileDamage(enemy, rawDamage) {
+  const effectiveArmor = Math.max(0, enemy.armor - state.tower.piercing);
+  const damageFloor = rawDamage * 0.25;
+  return Math.max(damageFloor, rawDamage - effectiveArmor);
 }
 
 function findTarget() {
@@ -644,7 +663,7 @@ function updateProjectiles(dt) {
     for (let j = state.enemies.length - 1; j >= 0; j -= 1) {
       const enemy = state.enemies[j];
       if (Math.hypot(p.x - enemy.x, p.y - enemy.y) < p.radius + enemy.radius) {
-        enemy.hp -= p.damage;
+        enemy.hp -= calculateProjectileDamage(enemy, p.damage);
         burst(p.x, p.y, p.color, 7);
         hit = true;
         if (enemy.hp <= 0) {
@@ -765,6 +784,7 @@ function buyUpgrade(kind) {
   if (kind === "rate") state.tower.fireDelay = Math.max(0.13, state.tower.fireDelay * 0.84);
   if (kind === "range") state.tower.range += 38;
   if (kind === "split") state.tower.split = Math.min(state.tower.gunBases.length, state.tower.split + 1);
+  if (kind === "piercing") state.tower.piercing += 2;
   if (kind === "hull") {
     state.maxHealth += 25;
     state.health = Math.min(state.maxHealth, state.health + 35);
