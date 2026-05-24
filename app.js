@@ -198,7 +198,7 @@ const enemyTypes = {
     accent: "#9dff66",
     shape: "needle",
     sprite: "interceptor",
-    spriteWidth: 48
+    spriteWidth: 54
   },
   raider: {
     radius: 13,
@@ -213,7 +213,7 @@ const enemyTypes = {
     accent: "#dbff77",
     shape: "saucer",
     sprite: "raider",
-    spriteWidth: 64
+    spriteWidth: 70
   },
   dreadnought: {
     radius: 20,
@@ -228,7 +228,7 @@ const enemyTypes = {
     accent: "#e0bc6d",
     shape: "barge",
     sprite: "dreadnought",
-    spriteWidth: 96
+    spriteWidth: 106
   },
   artillery: {
     radius: 16,
@@ -243,7 +243,7 @@ const enemyTypes = {
     accent: "#c47cff",
     shape: "frigate",
     sprite: "artillery",
-    spriteWidth: 88,
+    spriteWidth: 97,
     stopRange: 285,
     fireDelay: 2.1,
     shotDamage: 7
@@ -261,7 +261,7 @@ const enemyTypes = {
     accent: "#f1d181",
     shape: "needle",
     sprite: "droneLeader",
-    spriteWidth: 58
+    spriteWidth: 64
   }
 };
 
@@ -1359,19 +1359,9 @@ function drawEnemySprite(enemy) {
   const height = width * (image.naturalHeight / image.naturalWidth);
   ctx.save();
   ctx.shadowColor = enemy.color;
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = 6;
   ctx.drawImage(image, -width / 2, -height / 2, width, height);
   ctx.shadowBlur = 0;
-
-  ctx.globalCompositeOperation = "screen";
-  const pulse = 0.25 + Math.sin(state.time * 8 + enemy.spin) * 0.08;
-  ctx.globalAlpha = pulse;
-  ctx.fillStyle = enemy.accent;
-  ctx.beginPath();
-  ctx.ellipse(-width * 0.42, 0, width * 0.2, height * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = "source-over";
   ctx.restore();
   return true;
 }

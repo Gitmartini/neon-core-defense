@@ -86,10 +86,16 @@ button {
   overflow: hidden;
   border: 1px solid rgba(124, 140, 95, 0.38);
   background:
-    radial-gradient(circle at 14% 18%, rgba(142, 177, 85, 0.22), transparent 0.8rem),
-    radial-gradient(circle at 86% 78%, rgba(72, 102, 55, 0.2), transparent 1rem),
-    repeating-linear-gradient(157deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 13px),
-    linear-gradient(135deg, rgba(88, 78, 62, 0.42), rgba(20, 24, 16, 0.98) 34%, rgba(8, 10, 7, 0.98) 72%, rgba(63, 49, 35, 0.4)),
+    radial-gradient(ellipse at 24% 28%, rgba(185, 179, 130, 0.11), transparent 1.45rem),
+    radial-gradient(ellipse at 48% 55%, rgba(4, 5, 3, 0.56), transparent 2.1rem),
+    radial-gradient(ellipse at 88% 70%, rgba(121, 133, 83, 0.14), transparent 1.55rem),
+    radial-gradient(ellipse at 13% 21%, rgba(155, 190, 98, 0.34), transparent 0.9rem),
+    radial-gradient(ellipse at 78% 18%, rgba(77, 96, 54, 0.28), transparent 1.25rem),
+    radial-gradient(ellipse at 72% 83%, rgba(46, 66, 37, 0.34), transparent 1.15rem),
+    repeating-linear-gradient(172deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(83deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(28deg, rgba(121, 105, 76, 0.08) 0 2px, transparent 2px 23px),
+    linear-gradient(135deg, rgba(97, 86, 68, 0.56), rgba(21, 24, 17, 0.99) 34%, rgba(6, 8, 5, 0.99) 72%, rgba(72, 55, 38, 0.48)),
     linear-gradient(180deg, rgba(23, 27, 19, 0.98), rgba(5, 7, 4, 0.96));
   box-shadow:
     inset 0 2px 0 rgba(220, 218, 176, 0.08),
@@ -97,6 +103,26 @@ button {
     inset 0 0 28px rgba(0, 0, 0, 0.32),
     0 0 22px rgba(16, 22, 12, 0.55);
   clip-path: polygon(12px 0, calc(100% - 16px) 0, 100% 12px, calc(100% - 4px) calc(100% - 13px), calc(100% - 18px) 100%, 10px calc(100% - 3px), 0 calc(100% - 16px), 3px 10px);
+}
+
+.hud > div::before,
+.hud-tools::before,
+.pulse-button::before,
+.pause-button::before,
+.upgrade::before,
+.panel::before,
+.briefing-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(116deg, transparent 0 23%, rgba(0, 0, 0, 0.38) 23.5%, transparent 25% 100%),
+    linear-gradient(43deg, transparent 0 62%, rgba(192, 177, 126, 0.14) 63%, rgba(0, 0, 0, 0.18) 64%, transparent 65% 100%),
+    linear-gradient(161deg, transparent 0 76%, rgba(0, 0, 0, 0.3) 77%, transparent 78% 100%),
+    radial-gradient(ellipse at 34% 20%, rgba(255, 255, 255, 0.07), transparent 1.2rem),
+    radial-gradient(ellipse at 58% 86%, rgba(0, 0, 0, 0.32), transparent 1.8rem);
+  mix-blend-mode: multiply;
 }
 
 .hud > div::after,
@@ -110,13 +136,17 @@ button {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.72;
+  opacity: 1;
   background:
-    radial-gradient(circle at 9% 18%, rgba(165, 214, 105, 0.28) 0 2px, transparent 3px),
-    radial-gradient(circle at 19% 81%, rgba(70, 116, 65, 0.25) 0 2px, transparent 3px),
-    radial-gradient(circle at 86% 24%, rgba(104, 126, 75, 0.22) 0 1px, transparent 2px),
-    linear-gradient(105deg, transparent 0 44%, rgba(0, 0, 0, 0.22) 45%, transparent 47% 100%);
-  mix-blend-mode: screen;
+    radial-gradient(circle at 9% 18%, rgba(165, 214, 105, 0.5) 0 2px, transparent 4px),
+    radial-gradient(circle at 15% 23%, rgba(89, 130, 72, 0.42) 0 1px, transparent 3px),
+    radial-gradient(circle at 19% 81%, rgba(70, 116, 65, 0.42) 0 3px, transparent 5px),
+    radial-gradient(circle at 86% 24%, rgba(104, 126, 75, 0.38) 0 2px, transparent 4px),
+    radial-gradient(circle at 77% 78%, rgba(134, 155, 91, 0.32) 0 1px, transparent 3px),
+    radial-gradient(ellipse at 55% 42%, rgba(99, 131, 70, 0.16) 0 0.65rem, transparent 1.15rem),
+    radial-gradient(ellipse at 37% 70%, rgba(177, 196, 116, 0.12) 0 0.4rem, transparent 0.95rem),
+    linear-gradient(105deg, transparent 0 40%, rgba(0, 0, 0, 0.26) 41%, transparent 43% 100%),
+    linear-gradient(22deg, transparent 0 70%, rgba(178, 164, 115, 0.16) 71%, transparent 72% 100%);
 }
 
 .hud-tools {

@@ -53,6 +53,24 @@ function speckle(png, color, threshold = 0.9, seed = 1) {
   }
 }
 
+function outline(png, color = rgba("050604", 210)) {
+  const source = Buffer.from(png.data);
+  for (let y = 1; y < png.height - 1; y += 1) {
+    for (let x = 1; x < png.width - 1; x += 1) {
+      const offset = (y * png.width + x) * 4;
+      if (source[offset + 3] > 20) continue;
+      let near = false;
+      for (let yy = -2; yy <= 2; yy += 1) {
+        for (let xx = -2; xx <= 2; xx += 1) {
+          const ni = ((y + yy) * png.width + x + xx) * 4;
+          if (source[ni + 3] > 80) near = true;
+        }
+      }
+      if (near) blend(png, x, y, color);
+    }
+  }
+}
+
 function ellipse(png, cx, cy, rx, ry, color, rotation = 0) {
   const cos = Math.cos(rotation);
   const sin = Math.sin(rotation);
@@ -108,89 +126,103 @@ function polygon(png, points, color) {
 }
 
 function write(name, png, dir = shipDir) {
+  outline(png);
   fs.writeFileSync(path.join(dir, name), PNG.sync.write(png));
 }
 
 function skitterling() {
-  const png = makePng(220, 150);
-  glow(png, 110, 76, 62, rgba("9dff66", 55));
-  ellipse(png, 110, 76, 56, 24, rgba("11180f", 245), -0.05);
-  ellipse(png, 136, 70, 30, 17, rgba("d5f0c2", 170), -0.2);
-  for (let i = 0; i < 8; i += 1) {
+  const png = makePng(250, 170);
+  glow(png, 124, 86, 62, rgba("9dff66", 34));
+  ellipse(png, 116, 87, 72, 31, rgba("060b06", 255), -0.05);
+  ellipse(png, 154, 79, 39, 21, rgba("b8d1a8", 205), -0.2);
+  ellipse(png, 96, 96, 42, 17, rgba("2a3521", 220), 0.2);
+  for (let i = 0; i < 10; i += 1) {
     const y = 48 + i * 11;
-    line(png, 96, y, 48, y - 23 + i * 7, rgba("b8d2a9", 190), 1.7);
-    line(png, 116, y, 172, y - 26 + i * 7, rgba("b8d2a9", 190), 1.7);
-    ellipse(png, 43, y - 23 + i * 7, 3, 3, rgba("d5f0c2", 120));
-    ellipse(png, 177, y - 26 + i * 7, 3, 3, rgba("d5f0c2", 120));
+    const legAlpha = i % 2 === 0 ? 220 : 150;
+    line(png, 100, y, 44, y - 22 + i * 7, rgba("bacfae", legAlpha), 1.8);
+    line(png, 130, y, 202, y - 26 + i * 7, rgba("bacfae", legAlpha), 1.8);
+    ellipse(png, 40, y - 22 + i * 7, 3, 3, rgba("d8e8ca", 120));
+    ellipse(png, 206, y - 26 + i * 7, 3, 3, rgba("d8e8ca", 120));
   }
-  for (let i = 0; i < 7; i += 1) line(png, 78 + i * 10, 56, 84 + i * 10, 96, rgba("2b3a22", 170), 1);
-  ellipse(png, 148, 69, 5, 4, rgba("f5ffe6", 230));
-  ellipse(png, 149, 84, 4, 3, rgba("f5ffe6", 210));
-  speckle(png, rgba("a8e693", 100), 0.9, 11);
+  for (let i = 0; i < 9; i += 1) line(png, 76 + i * 12, 60, 84 + i * 12, 108, rgba("414f32", 190), 1.3);
+  for (const p of [[88, 78], [105, 66], [123, 70], [139, 91]]) {
+    ellipse(png, p[0], p[1], 10, 7, rgba("526042", 185), noise(p[0], p[1]) * 0.9);
+  }
+  ellipse(png, 166, 77, 6, 5, rgba("f5ffe6", 245));
+  ellipse(png, 167, 96, 5, 4, rgba("f5ffe6", 230));
+  ellipse(png, 168, 78, 2, 2, rgba("050604", 240));
+  ellipse(png, 168, 96, 2, 2, rgba("050604", 240));
+  speckle(png, rgba("a8e693", 125), 0.86, 11);
   return png;
 }
 
 function graveSlime() {
-  const png = makePng(240, 180);
-  glow(png, 122, 92, 78, rgba("84f0ad", 75));
-  ellipse(png, 116, 96, 70, 42, rgba("0f2518", 220));
-  ellipse(png, 136, 78, 42, 31, rgba("3a6c4a", 150));
-  ellipse(png, 76, 114, 28, 16, rgba("1e3d28", 180), 0.25);
-  ellipse(png, 170, 112, 32, 18, rgba("10271b", 190), -0.2);
-  ellipse(png, 100, 105, 19, 6, rgba("d9e1c7", 155), 0.35);
-  ellipse(png, 142, 102, 10, 23, rgba("d9e1c7", 125), -0.45);
+  const png = makePng(270, 200);
+  glow(png, 136, 104, 86, rgba("84f0ad", 58));
+  ellipse(png, 126, 107, 82, 50, rgba("07150d", 240));
+  ellipse(png, 152, 85, 50, 35, rgba("3a6c4a", 170));
+  ellipse(png, 82, 128, 34, 18, rgba("1e3d28", 200), 0.25);
+  ellipse(png, 196, 126, 40, 20, rgba("10271b", 210), -0.2);
+  ellipse(png, 112, 116, 25, 7, rgba("d9e1c7", 170), 0.35);
+  ellipse(png, 160, 114, 13, 27, rgba("d9e1c7", 145), -0.45);
   for (const p of [[122, 79], [132, 92], [151, 80], [165, 94], [92, 98]]) {
     ellipse(png, p[0], p[1], 6, 5, rgba("dbff77", 185));
     ellipse(png, p[0] + 1, p[1], 2, 2, rgba("11180f", 220));
   }
-  for (let i = 0; i < 11; i += 1) ellipse(png, 66 + i * 13, 128 + Math.sin(i) * 7, 4, 7, rgba("d9e1c7", 105), i * 0.4);
-  speckle(png, rgba("84f0ad", 90), 0.88, 21);
+  for (let i = 0; i < 14; i += 1) ellipse(png, 70 + i * 14, 146 + Math.sin(i) * 8, 4, 8, rgba("d9e1c7", 130), i * 0.4);
+  speckle(png, rgba("84f0ad", 125), 0.84, 21);
   return png;
 }
 
 function gallopingCrud() {
-  const png = makePng(300, 220);
-  glow(png, 154, 112, 94, rgba("e0bc6d", 58));
-  ellipse(png, 142, 118, 90, 53, rgba("2a2118", 235), 0.06);
-  ellipse(png, 176, 95, 58, 40, rgba("5a4229", 210), -0.2);
-  for (const p of [[92, 92], [134, 73], [176, 133], [213, 102], [116, 145], [158, 103], [199, 148]]) {
-    polygon(png, [[p[0] - 17, p[1] - 9], [p[0] + 18, p[1] - 13], [p[0] + 14, p[1] + 12], [p[0] - 13, p[1] + 15]], rgba("9b8360", 180));
-    line(png, p[0] - 13, p[1] - 8, p[0] + 13, p[1] + 9, rgba("2f261d", 150), 1.1);
+  const png = makePng(340, 240);
+  glow(png, 176, 122, 92, rgba("e0bc6d", 34));
+  ellipse(png, 156, 128, 112, 66, rgba("110d0a", 255), 0.06);
+  ellipse(png, 207, 102, 70, 48, rgba("47331f", 240), -0.2);
+  ellipse(png, 102, 116, 55, 42, rgba("281d14", 245), 0.3);
+  ellipse(png, 170, 118, 80, 38, rgba("3a2b1d", 220), -0.15);
+  for (const p of [[82, 93], [124, 76], [166, 137], [211, 104], [112, 149], [154, 105], [203, 151], [246, 122]]) {
+    polygon(png, [[p[0] - 20, p[1] - 11], [p[0] + 20, p[1] - 14], [p[0] + 16, p[1] + 14], [p[0] - 15, p[1] + 16]], rgba("7f6d50", 170));
+    line(png, p[0] - 14, p[1] - 9, p[0] + 14, p[1] + 10, rgba("211911", 165), 1.2);
   }
-  for (let i = 0; i < 7; i += 1) line(png, 86 + i * 25, 158 + Math.sin(i) * 8, 70 + i * 28, 196, rgba("b98245", 180), 3);
-  for (let i = 0; i < 8; i += 1) ellipse(png, 82 + i * 23, 80 + Math.sin(i * 2) * 18, 5, 8, rgba("e1d2b0", 130), i);
-  ellipse(png, 219, 91, 8, 6, rgba("f1d181", 230));
-  speckle(png, rgba("d6b56d", 85), 0.87, 31);
+  for (let i = 0; i < 8; i += 1) line(png, 88 + i * 27, 174 + Math.sin(i) * 8, 74 + i * 30, 218, rgba("8a6238", 230), 4);
+  for (let i = 0; i < 10; i += 1) ellipse(png, 74 + i * 23, 78 + Math.sin(i * 2) * 18, 5, 9, rgba("c7b992", 135), i);
+  ellipse(png, 249, 96, 10, 8, rgba("f1d181", 240));
+  ellipse(png, 252, 96, 3, 3, rgba("060604", 230));
+  for (let i = 0; i < 9; i += 1) {
+    line(png, 218 + i * 5, 122 + Math.sin(i) * 5, 230 + i * 6, 139 + Math.sin(i) * 7, rgba("d8ccb0", 150), 1.4);
+  }
+  speckle(png, rgba("d6b56d", 95), 0.86, 31);
   return png;
 }
 
 function gloomTerror() {
-  const png = makePng(250, 170);
-  glow(png, 132, 86, 76, rgba("c47cff", 80));
-  for (let i = 0; i < 16; i += 1) {
-    ellipse(png, 72 + i * 7, 78 + Math.sin(i) * 20, 38 - i * 0.8, 22, rgba("0d0c0f", 105));
+  const png = makePng(285, 200);
+  glow(png, 150, 100, 86, rgba("c47cff", 70));
+  for (let i = 0; i < 21; i += 1) {
+    ellipse(png, 72 + i * 7, 92 + Math.sin(i) * 24, 46 - i * 0.75, 27, rgba("030304", 130));
   }
-  for (let i = 0; i < 7; i += 1) line(png, 130, 88, 74 + i * 22, 38 + Math.sin(i) * 55, rgba("2e213d", 90), 2);
-  ellipse(png, 148, 86, 18, 13, rgba("2e213d", 210));
-  ellipse(png, 154, 86, 6, 5, rgba("e2b7ff", 235));
-  line(png, 162, 86, 215, 70, rgba("c47cff", 185), 2);
-  speckle(png, rgba("c47cff", 95), 0.915, 42);
+  for (let i = 0; i < 10; i += 1) line(png, 148, 103, 70 + i * 22, 42 + Math.sin(i) * 68, rgba("2e213d", 110), 2.4);
+  ellipse(png, 166, 100, 23, 16, rgba("2e213d", 230));
+  ellipse(png, 174, 100, 8, 6, rgba("e2b7ff", 245));
+  line(png, 184, 100, 255, 80, rgba("c47cff", 205), 2.5);
+  speckle(png, rgba("c47cff", 130), 0.88, 42);
   return png;
 }
 
 function oculusHorror() {
-  const png = makePng(230, 190);
-  glow(png, 118, 94, 78, rgba("d37b73", 72));
-  for (let i = 0; i < 14; i += 1) {
-    const a = (i / 14) * Math.PI * 2;
-    line(png, 118, 96, 118 + Math.cos(a) * (72 + noise(i, 2) * 18), 96 + Math.sin(a) * (48 + noise(i, 4) * 18), rgba("6f3d3a", 165), 2.2);
+  const png = makePng(270, 220);
+  glow(png, 136, 110, 88, rgba("d37b73", 60));
+  for (let i = 0; i < 18; i += 1) {
+    const a = (i / 18) * Math.PI * 2;
+    line(png, 136, 110, 136 + Math.cos(a) * (86 + noise(i, 2) * 22), 110 + Math.sin(a) * (60 + noise(i, 4) * 22), rgba("6f3d3a", 185), 2.6);
   }
-  ellipse(png, 118, 94, 55, 41, rgba("4a2d2a", 235));
-  ellipse(png, 130, 94, 31, 25, rgba("efd3b3", 230));
-  for (let i = 0; i < 10; i += 1) line(png, 103 + i * 5, 75, 94 + i * 8, 58 + Math.sin(i) * 7, rgba("b45150", 125), 1);
-  ellipse(png, 138, 95, 13, 13, rgba("1c120f", 245));
-  ellipse(png, 142, 91, 4, 4, rgba("ffffff", 220));
-  speckle(png, rgba("d37b73", 70), 0.91, 51);
+  ellipse(png, 136, 108, 66, 49, rgba("4a2d2a", 245));
+  ellipse(png, 151, 108, 38, 29, rgba("efd3b3", 240));
+  for (let i = 0; i < 13; i += 1) line(png, 112 + i * 6, 86, 94 + i * 10, 64 + Math.sin(i) * 10, rgba("b45150", 145), 1.2);
+  ellipse(png, 161, 109, 16, 16, rgba("1c120f", 250));
+  ellipse(png, 166, 103, 5, 5, rgba("ffffff", 230));
+  speckle(png, rgba("d37b73", 100), 0.87, 51);
   return png;
 }
 
