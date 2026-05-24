@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace "com.gitmartini.neoncoredefense"
+    namespace "com.gitmartini.slither"
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.gitmartini.neoncoredefense"
+        applicationId "com.gitmartini.slither"
         minSdk 23
         targetSdk 35
         versionCode 1

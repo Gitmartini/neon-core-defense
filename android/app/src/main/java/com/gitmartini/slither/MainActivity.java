@@ -1,4 +1,4 @@
-package com.gitmartini.neoncoredefense;
+package com.gitmartini.slither;
 
 import android.app.Activity;
 import android.os.Bundle;
