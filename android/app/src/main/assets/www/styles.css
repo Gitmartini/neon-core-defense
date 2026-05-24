@@ -82,16 +82,41 @@ button {
 .upgrade,
 .panel,
 .briefing-panel {
-  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(124, 140, 95, 0.38);
   background:
-    radial-gradient(circle at 12% 18%, rgba(182, 255, 120, 0.13), transparent 1.1rem),
-    linear-gradient(135deg, rgba(141, 255, 213, 0.1), transparent 18%, transparent 82%, rgba(125, 86, 47, 0.18)),
-    linear-gradient(180deg, rgba(18, 24, 15, 0.97), rgba(5, 7, 4, 0.96));
+    radial-gradient(circle at 14% 18%, rgba(142, 177, 85, 0.22), transparent 0.8rem),
+    radial-gradient(circle at 86% 78%, rgba(72, 102, 55, 0.2), transparent 1rem),
+    repeating-linear-gradient(157deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 13px),
+    linear-gradient(135deg, rgba(88, 78, 62, 0.42), rgba(20, 24, 16, 0.98) 34%, rgba(8, 10, 7, 0.98) 72%, rgba(63, 49, 35, 0.4)),
+    linear-gradient(180deg, rgba(23, 27, 19, 0.98), rgba(5, 7, 4, 0.96));
   box-shadow:
-    inset 0 0 0 2px rgba(255, 255, 255, 0.035),
-    inset 0 0 28px rgba(141, 255, 213, 0.05),
-    0 0 28px rgba(43, 23, 16, 0.28);
-  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+    inset 0 2px 0 rgba(220, 218, 176, 0.08),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.32),
+    inset 0 0 28px rgba(0, 0, 0, 0.32),
+    0 0 22px rgba(16, 22, 12, 0.55);
+  clip-path: polygon(12px 0, calc(100% - 16px) 0, 100% 12px, calc(100% - 4px) calc(100% - 13px), calc(100% - 18px) 100%, 10px calc(100% - 3px), 0 calc(100% - 16px), 3px 10px);
+}
+
+.hud > div::after,
+.hud-tools::after,
+.pulse-button::after,
+.pause-button::after,
+.upgrade::after,
+.panel::after,
+.briefing-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.72;
+  background:
+    radial-gradient(circle at 9% 18%, rgba(165, 214, 105, 0.28) 0 2px, transparent 3px),
+    radial-gradient(circle at 19% 81%, rgba(70, 116, 65, 0.25) 0 2px, transparent 3px),
+    radial-gradient(circle at 86% 24%, rgba(104, 126, 75, 0.22) 0 1px, transparent 2px),
+    linear-gradient(105deg, transparent 0 44%, rgba(0, 0, 0, 0.22) 45%, transparent 47% 100%);
+  mix-blend-mode: screen;
 }
 
 .hud-tools {
@@ -230,8 +255,9 @@ button {
   overflow: hidden;
   border-color: rgba(255, 95, 199, 0.42);
   background:
-    linear-gradient(135deg, rgba(255, 95, 199, 0.18), transparent 36%, rgba(111, 247, 255, 0.12)),
-    linear-gradient(180deg, rgba(18, 16, 31, 0.98), rgba(3, 7, 12, 0.96));
+    radial-gradient(circle at 15% 18%, rgba(104, 151, 79, 0.24), transparent 1rem),
+    linear-gradient(135deg, rgba(70, 56, 44, 0.56), transparent 36%, rgba(52, 77, 45, 0.32)),
+    linear-gradient(180deg, rgba(24, 20, 17, 0.98), rgba(5, 7, 4, 0.96));
   text-align: center;
 }
 
@@ -245,17 +271,21 @@ button {
 }
 
 .pulse-button span {
-  color: var(--pink);
+  color: #c7a1ff;
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.04em;
-  text-shadow: 0 0 8px rgba(255, 95, 199, 0.45);
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.92),
+    0 0 8px rgba(196, 124, 255, 0.34);
 }
 
 .pulse-button strong {
-  color: var(--cyan);
+  color: #e4efd0;
   font-size: 0.78rem;
-  text-shadow: 0 0 10px rgba(111, 247, 255, 0.55);
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.92),
+    0 0 10px rgba(182, 255, 120, 0.38);
 }
 
 .pulse-button i {
@@ -290,21 +320,26 @@ button {
 .label,
 .kicker {
   margin: 0 0 2px;
-  color: var(--muted);
+  color: #a9bd91;
   font-size: 0.53rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.88),
+    -1px -1px 0 rgba(166, 214, 109, 0.12);
 }
 
 .hud strong {
   display: block;
   min-height: 1rem;
-  color: #ffffff;
+  color: #e9f4d9;
   font-size: 0.92rem;
   line-height: 1.05;
   text-align: right;
-  text-shadow: 0 0 9px rgba(111, 247, 255, 0.42);
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(182, 255, 120, 0.22);
 }
 
 .meter {
@@ -330,15 +365,15 @@ button {
   grid-column: 2;
   grid-row: 1;
   min-height: 0;
-  border: 2px solid rgba(111, 247, 255, 0.28);
+  border: 2px solid rgba(112, 136, 92, 0.44);
   border-radius: 4px;
   overflow: hidden;
   background: #05080d;
   box-shadow:
-    inset 0 0 0 2px rgba(255, 52, 127, 0.16),
-    inset 0 0 42px rgba(111, 247, 255, 0.08),
+    inset 0 0 0 2px rgba(87, 58, 38, 0.28),
+    inset 0 0 42px rgba(141, 255, 213, 0.05),
     0 18px 60px rgba(0, 0, 0, 0.38),
-    0 0 36px rgba(111, 247, 255, 0.1);
+    0 0 36px rgba(32, 46, 24, 0.3);
 }
 
 .game-wrap::before,
@@ -349,8 +384,8 @@ button {
   bottom: 12%;
   width: 4px;
   z-index: 1;
-  background: linear-gradient(transparent, var(--hot), transparent);
-  box-shadow: 0 0 16px var(--hot);
+  background: linear-gradient(transparent, rgba(104, 151, 79, 0.9), transparent);
+  box-shadow: 0 0 16px rgba(104, 151, 79, 0.6);
   pointer-events: none;
 }
 
@@ -715,6 +750,9 @@ canvas {
   line-height: 1;
   overflow-wrap: normal;
   word-break: normal;
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.86),
+    -1px -1px 0 rgba(166, 214, 109, 0.1);
 }
 
 .upgrade strong {
@@ -722,6 +760,9 @@ canvas {
   color: var(--lime);
   font-size: 17px;
   line-height: 1;
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.86),
+    0 0 8px rgba(182, 255, 120, 0.2);
 }
 
 .upgrade small {
@@ -731,6 +772,7 @@ canvas {
   line-height: 1;
   overflow-wrap: anywhere;
   text-align: right;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
 }
 
 .upgrade[data-upgrade="damage"] span,
