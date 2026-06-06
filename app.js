@@ -161,7 +161,8 @@ const enemySpriteSources = {
   raider: "assets/ships/raider.png",
   dreadnought: "assets/ships/dreadnought.png",
   artillery: "assets/ships/artillery.png",
-  droneLeader: "assets/ships/drone-leader.png"
+  droneLeader: "assets/ships/drone-leader.png",
+  bossShieldbreaker: "assets/ships/boss-shieldbreaker.png"
 };
 
 const enemySpriteImages = {};
@@ -302,8 +303,8 @@ const enemyTypes = {
     color: colors.amber,
     accent: colors.red,
     shape: "barge",
-    sprite: "dreadnought",
-    spriteWidth: 128,
+    sprite: "bossShieldbreaker",
+    spriteWidth: 176,
     isBoss: true,
     pulseMultiplier: balance.pulse.bossMultiplier
   }
@@ -1413,7 +1414,7 @@ function drawEnemies() {
 
     if (enemy.hp < enemy.maxHp) {
       const hpPct = enemy.hp / enemy.maxHp;
-      const barWidth = enemy.isBoss ? enemy.radius * 2.6 : enemy.radius * 2;
+      const barWidth = enemy.isBoss ? Math.max(enemy.radius * 2.6, enemy.spriteWidth * 0.72) : enemy.radius * 2;
       const barHeight = enemy.isBoss ? 6 : 4;
       const barY = enemy.y - enemy.radius - (enemy.isBoss ? 15 : 10);
       ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
