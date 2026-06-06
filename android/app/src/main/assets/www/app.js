@@ -76,13 +76,13 @@ const state = {
   particles: [],
   pulseCharge: 0,
   pulseMax: 100,
-  pulseDamage: 85,
   pulseWave: null,
   pulseFlash: 0,
   runStats: null,
   spawnTimer: 0,
   spawnBudget: 0,
   interceptorBudget: 0,
+  bossSpawnedThisWave: false,
   waveBreak: 1.5,
   upgrades: createInitialUpgrades(),
   tower: {
@@ -108,6 +108,28 @@ const colors = {
   orange: "#ff9f43",
   red: "#ff596f",
   dark: "#05080d"
+};
+
+const balance = {
+  score: {
+    valueMultiplier: 10,
+    hpMultiplier: 0.6,
+    waveBonus: 12,
+    bossValueMultiplier: 25,
+    bossHpMultiplier: 1.2,
+    bossWaveBonus: 60
+  },
+  economy: {
+    waveBaseCredits: 12,
+    waveCreditScale: 2
+  },
+  pulse: {
+    baseDamage: 85,
+    bossMultiplier: 0.2
+  },
+  bosses: {
+    firstBossWave: 5
+  }
 };
 
 const upgradeLabels = {
@@ -262,6 +284,23 @@ const enemyTypes = {
     shape: "needle",
     sprite: "droneLeader",
     spriteWidth: 58
+  },
+  bossShieldbreaker: {
+    radius: 30,
+    hp: 750,
+    hpScale: 120,
+    armor: 10,
+    speed: 22,
+    speedScale: 1.2,
+    value: 110,
+    damage: 32,
+    color: colors.amber,
+    accent: colors.red,
+    shape: "barge",
+    sprite: "dreadnought",
+    spriteWidth: 128,
+    isBoss: true,
+    pulseMultiplier: balance.pulse.bossMultiplier
   }
 };
 
@@ -301,6 +340,7 @@ function resetGame() {
   };
   state.interceptorBudget = state.wave * 2;
   state.spawnBudget = 10 + state.wave * 4 + state.interceptorBudget;
+  state.bossSpawnedThisWave = false;
   state.spawnTimer = 0.2;
   state.waveBreak = 1.5;
   state.upgrades = createInitialUpgrades();
@@ -351,7 +391,7 @@ function rand(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function spawnEnemy() {
+function spawnEnemy(typeOverride = null) {
   const side = Math.floor(Math.random() * 4);
   const padding = 38;
   let x = 0;
@@ -371,9 +411,9 @@ function spawnEnemy() {
     y = rand(0, state.height);
   }
 
-  const waveBoost = state.wave - 1;
-  const type = chooseEnemyType();
+  const type = typeOverride || chooseEnemyType();
   const template = enemyTypes[type];
+  const waveBoost = template.isBoss ? Math.max(0, state.wave - balance.bosses.firstBossWave) : state.wave - 1;
   const hpMultiplier = 1 + waveBoost * 0.06;
   const hp = (template.hp + waveBoost * template.hpScale) * hpMultiplier;
   const speed = template.speed + waveBoost * template.speedScale;
@@ -395,6 +435,8 @@ function spawnEnemy() {
     accent: template.accent,
     sprite: template.sprite,
     spriteWidth: template.spriteWidth,
+    isBoss: Boolean(template.isBoss),
+    pulseMultiplier: template.pulseMultiplier,
     angle: angleToCore,
     spin: rand(0, Math.PI * 2),
     strafe: rand(-1, 1),
@@ -403,6 +445,21 @@ function spawnEnemy() {
     fireDelay: template.fireDelay || 0,
     shotDamage: (template.shotDamage || 0) + Math.floor(waveBoost * 0.45)
   });
+}
+
+function shouldSpawnFirstBoss() {
+  return state.wave === balance.bosses.firstBossWave && !state.bossSpawnedThisWave;
+}
+
+function spawnWaveEnemy() {
+  if (shouldSpawnFirstBoss()) {
+    spawnEnemy("bossShieldbreaker");
+    state.bossSpawnedThisWave = true;
+    state.spawnBudget = Math.max(0, state.spawnBudget - 3);
+    return;
+  }
+
+  spawnEnemy();
 }
 
 function chooseEnemyType() {
@@ -423,9 +480,10 @@ function nextWave() {
   state.wave += 1;
   state.interceptorBudget = state.wave * 2;
   state.spawnBudget = 10 + state.wave * 4 + state.interceptorBudget;
+  state.bossSpawnedThisWave = false;
   state.spawnTimer = 0.4;
   state.waveBreak = 1.4;
-  state.credits += 12 + state.wave * 2;
+  state.credits += balance.economy.waveBaseCredits + state.wave * balance.economy.waveCreditScale;
   playSound("waveStart", { volume: 0.42, cooldown: 500 });
   burst(center().x, center().y, colors.lime, 22);
 }
@@ -436,7 +494,19 @@ function addPulseCharge(amount) {
 }
 
 function recordEnemyDestroyed(enemy, options = {}) {
-  state.score += Math.round(enemy.value * 10 + state.wave * 8);
+  if (enemy.isBoss) {
+    state.score += Math.round(
+      enemy.value * balance.score.bossValueMultiplier +
+      enemy.maxHp * balance.score.bossHpMultiplier +
+      state.wave * balance.score.bossWaveBonus
+    );
+  } else {
+    state.score += Math.round(
+      enemy.value * balance.score.valueMultiplier +
+      enemy.maxHp * balance.score.hpMultiplier +
+      state.wave * balance.score.waveBonus
+    );
+  }
   state.credits += enemy.value;
   if (state.runStats) state.runStats.enemiesDestroyed += 1;
   if (options.chargePulse !== false) addPulseCharge(enemy.value * pulseChargeFactor);
@@ -679,7 +749,7 @@ function update(dt) {
   if (state.spawnBudget > 0) {
     state.spawnTimer -= dt;
     if (state.spawnTimer <= 0) {
-      spawnEnemy();
+      spawnWaveEnemy();
       state.spawnBudget -= 1;
       state.spawnTimer = Math.max(0.16, 0.82 - state.wave * 0.04);
     }
@@ -781,7 +851,8 @@ function activateEmergencyPulse() {
     if (dist > pulseRadius + enemy.radius) continue;
 
     const falloff = 1 - Math.max(0, dist - 60) / Math.max(1, pulseRadius - 60);
-    const damage = state.pulseDamage * (0.58 + Math.max(0, falloff) * 0.42);
+    const multiplier = enemy.pulseMultiplier ?? 1;
+    const damage = balance.pulse.baseDamage * multiplier * (0.58 + Math.max(0, falloff) * 0.42);
     enemy.hp -= damage;
     enemy.x += Math.cos(enemy.angle) * -18;
     enemy.y += Math.sin(enemy.angle) * -18;
@@ -1319,10 +1390,13 @@ function drawEnemies() {
 
     if (enemy.hp < enemy.maxHp) {
       const hpPct = enemy.hp / enemy.maxHp;
+      const barWidth = enemy.isBoss ? enemy.radius * 2.6 : enemy.radius * 2;
+      const barHeight = enemy.isBoss ? 6 : 4;
+      const barY = enemy.y - enemy.radius - (enemy.isBoss ? 15 : 10);
       ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
-      ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2, 4);
+      ctx.fillRect(enemy.x - barWidth / 2, barY, barWidth, barHeight);
       ctx.fillStyle = enemy.color;
-      ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, enemy.radius * 2 * hpPct, 4);
+      ctx.fillRect(enemy.x - barWidth / 2, barY, barWidth * hpPct, barHeight);
     }
   }
 }
@@ -1358,7 +1432,7 @@ function drawEnemySprite(enemy) {
   const height = width * (image.naturalHeight / image.naturalWidth);
   ctx.save();
   ctx.shadowColor = enemy.color;
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = enemy.isBoss ? 24 : 12;
   ctx.drawImage(image, -width / 2, -height / 2, width, height);
   ctx.shadowBlur = 0;
 
