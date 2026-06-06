@@ -74,6 +74,7 @@ const state = {
   projectiles: [],
   enemyProjectiles: [],
   particles: [],
+  floatingTexts: [],
   pulseCharge: 0,
   pulseMax: 100,
   pulseWave: null,
@@ -128,7 +129,11 @@ const balance = {
     bossMultiplier: 0.2
   },
   bosses: {
-    firstBossWave: 5
+    firstBossWave: 5,
+    firstBossSpawnRelief: 6
+  },
+  feedback: {
+    waveRewardTextLife: 2.4
   }
 };
 
@@ -329,6 +334,7 @@ function resetGame() {
   state.projectiles = [];
   state.enemyProjectiles = [];
   state.particles = [];
+  state.floatingTexts = [];
   state.pulseCharge = 0;
   state.pulseWave = null;
   state.pulseFlash = 0;
@@ -455,7 +461,7 @@ function spawnWaveEnemy() {
   if (shouldSpawnFirstBoss()) {
     spawnEnemy("bossShieldbreaker");
     state.bossSpawnedThisWave = true;
-    state.spawnBudget = Math.max(0, state.spawnBudget - 3);
+    state.spawnBudget = Math.max(0, state.spawnBudget - balance.bosses.firstBossSpawnRelief);
     return;
   }
 
@@ -483,9 +489,24 @@ function nextWave() {
   state.bossSpawnedThisWave = false;
   state.spawnTimer = 0.4;
   state.waveBreak = 1.4;
-  state.credits += balance.economy.waveBaseCredits + state.wave * balance.economy.waveCreditScale;
+  const waveCredits = balance.economy.waveBaseCredits + state.wave * balance.economy.waveCreditScale;
+  state.credits += waveCredits;
+  showFloatingText(`Wave ${state.wave - 1} clear  +${waveCredits} credits`, colors.lime);
   playSound("waveStart", { volume: 0.42, cooldown: 500 });
   burst(center().x, center().y, colors.lime, 22);
+}
+
+function showFloatingText(text, color = colors.cyan) {
+  const c = center();
+  state.floatingTexts.push({
+    text,
+    color,
+    x: c.x,
+    y: c.y - 112,
+    vy: -12,
+    life: balance.feedback.waveRewardTextLife,
+    maxLife: balance.feedback.waveRewardTextLife
+  });
 }
 
 function addPulseCharge(amount) {
@@ -768,6 +789,7 @@ function update(dt) {
   updateProjectiles(dt);
   updateEnemyProjectiles(dt);
   updateParticles(dt);
+  updateFloatingTexts(dt);
   updateUi();
 }
 
@@ -1081,6 +1103,7 @@ function draw() {
   drawEnemyProjectiles();
   drawTower();
   drawParticles();
+  drawFloatingTexts();
   ctx.restore();
   drawPulseFlash();
 }
@@ -1401,6 +1424,15 @@ function drawEnemies() {
   }
 }
 
+function updateFloatingTexts(dt) {
+  for (let i = state.floatingTexts.length - 1; i >= 0; i -= 1) {
+    const text = state.floatingTexts[i];
+    text.y += text.vy * dt;
+    text.life -= dt;
+    if (text.life <= 0) state.floatingTexts.splice(i, 1);
+  }
+}
+
 function drawShipHull(enemy) {
   if (drawEnemySprite(enemy)) return;
 
@@ -1668,6 +1700,35 @@ function drawParticles() {
     ctx.fill();
     ctx.globalAlpha = 1;
   }
+}
+
+function drawFloatingTexts() {
+  if (state.floatingTexts.length === 0) return;
+
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 18px Segoe UI, system-ui, sans-serif";
+
+  for (const item of state.floatingTexts) {
+    const progress = Math.max(0, item.life / item.maxLife);
+    const alpha = Math.min(1, progress * 1.5);
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = item.color;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = "rgba(5, 8, 13, 0.74)";
+    const width = ctx.measureText(item.text).width + 28;
+    ctx.beginPath();
+    ctx.roundRect(item.x - width / 2, item.y - 17, width, 34, 8);
+    ctx.fill();
+    ctx.strokeStyle = item.color;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.fillStyle = item.color;
+    ctx.fillText(item.text, item.x, item.y);
+  }
+
+  ctx.restore();
 }
 
 function loop(now) {
