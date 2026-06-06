@@ -130,7 +130,7 @@ const balance = {
   },
   bosses: {
     firstBossWave: 5,
-    firstBossSpawnRelief: 6
+    firstBossSpawnRelief: 9
   },
   feedback: {
     waveRewardTextLife: 2.4
@@ -1709,7 +1709,7 @@ function drawFloatingTexts() {
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "700 18px Segoe UI, system-ui, sans-serif";
+  ctx.font = "700 23px Segoe UI, system-ui, sans-serif";
 
   for (const item of state.floatingTexts) {
     const progress = Math.max(0, item.life / item.maxLife);
@@ -1718,9 +1718,9 @@ function drawFloatingTexts() {
     ctx.shadowColor = item.color;
     ctx.shadowBlur = 16;
     ctx.fillStyle = "rgba(5, 8, 13, 0.74)";
-    const width = ctx.measureText(item.text).width + 28;
+    const width = ctx.measureText(item.text).width + 36;
     ctx.beginPath();
-    ctx.roundRect(item.x - width / 2, item.y - 17, width, 34, 8);
+    ctx.roundRect(item.x - width / 2, item.y - 22, width, 44, 10);
     ctx.fill();
     ctx.strokeStyle = item.color;
     ctx.lineWidth = 1.4;
